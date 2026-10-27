@@ -1751,4 +1751,82 @@ document.addEventListener("DOMContentLoaded", () => {
       fetchChartData();
     }
   }, 4000);
+
+  // =========================================================================
+  // PROGRESSIVE WEB APP (PWA) SERVICE WORKER & INSTALL CONTROLLER
+  // =========================================================================
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => {
+          console.log("[PWA] Service Worker registered. Scope:", reg.scope);
+        })
+        .catch((err) => {
+          console.warn("[PWA] Service Worker registration failed:", err);
+        });
+    });
+  }
+
+  let deferredPwaPrompt = null;
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  const btnInstallWelcome = document.getElementById("btn-install-pwa");
+  const btnInstallSettings = document.getElementById("btn-settings-install-pwa");
+
+  if (isStandalone) {
+    if (btnInstallSettings) {
+      btnInstallSettings.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon" style="color: var(--accent-green);">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Aplikasi Terpasang (Mode Standalone)</span>
+      `;
+      btnInstallSettings.style.opacity = "0.75";
+    }
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPwaPrompt = e;
+    console.log("[PWA] Install prompt captured and ready");
+
+    if (btnInstallWelcome && !isStandalone) {
+      btnInstallWelcome.style.display = "inline-flex";
+    }
+  });
+
+  async function triggerPwaInstall() {
+    if (isStandalone) {
+      showToast("Aplikasi NexusTrade sudah terpasang dalam mode Standalone.", "info");
+      return;
+    }
+
+    if (deferredPwaPrompt) {
+      deferredPwaPrompt.prompt();
+      const choice = await deferredPwaPrompt.userChoice;
+      if (choice.outcome === "accepted") {
+        showToast("Instalasi berhasil! Aplikasi NexusTrade kini tersedia di layar perangkat Anda.", "success");
+      }
+      deferredPwaPrompt = null;
+      if (btnInstallWelcome) btnInstallWelcome.style.display = "none";
+    } else {
+      // Fallback for iOS or browsers that don't support beforeinstallprompt
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        showToast("Di iPhone/iPad: Tap tombol Share (ikon kotak panah ke atas) lalu pilih 'Add to Home Screen' untuk menginstal.", "info");
+      } else {
+        showToast("Gunakan menu browser (titik 3 di kanan atas) lalu pilih 'Install App' / 'Tambahkan ke Layar Utama'.", "info");
+      }
+    }
+  }
+
+  if (btnInstallWelcome) btnInstallWelcome.addEventListener("click", triggerPwaInstall);
+  if (btnInstallSettings) btnInstallSettings.addEventListener("click", triggerPwaInstall);
+
+  window.addEventListener("appinstalled", () => {
+    showToast("Aplikasi NexusTrade berhasil di-install!", "success");
+    deferredPwaPrompt = null;
+    if (btnInstallWelcome) btnInstallWelcome.style.display = "none";
+  });
 });
+

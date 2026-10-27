@@ -67,6 +67,22 @@ async def serve_index():
     return FileResponse(str(STATIC_DIR / "index.html"))
 
 
+@app.get("/sw.js")
+async def serve_service_worker():
+    """Serves the PWA Service Worker script at root scope."""
+    return FileResponse(
+        str(STATIC_DIR / "sw.js"),
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/"},
+    )
+
+
+@app.get("/manifest.json")
+async def serve_manifest():
+    """Serves the PWA Web App Manifest."""
+    return FileResponse(str(STATIC_DIR / "manifest.json"), media_type="application/manifest+json")
+
+
 @app.get("/api/status")
 async def get_status() -> Dict[str, Any]:
     """Retrieves full system state, MT5 account telemetry, and safety indicators."""
