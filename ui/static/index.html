@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/static/index.css?v=8.0">
-  <script src="/static/libs/lightweight-charts.js?v=8.0"></script>
+  <link rel="stylesheet" href="/static/index.css?v=8.1">
+  <script src="/static/libs/lightweight-charts.js?v=8.1"></script>
 </head>
 <body class="shakuro-theme">
 
@@ -381,10 +381,16 @@
           </div>
         </div>
 
-        <!-- TOP QUICK TRADE EXECUTION CARD (Moved to TOP directly above chart!) -->
+        <!-- TOP QUICK TRADE EXECUTION CARD (Sticky, Kiri: Sell | Tengah: Lot | Kanan: Buy) -->
         <div class="top-trade-execution-card" id="quick-trade-bar">
           
-          <!-- Lot Stepper Controller -->
+          <!-- KIRI: Charcoal SELL Button -->
+          <button type="button" class="btn-screen3-sell" id="btn-quick-sell">
+            <span class="trade-action-name">Sell</span>
+            <span class="trade-action-price" id="qt-bid-price">--.---</span>
+          </button>
+
+          <!-- TENGAH: Lot Stepper Controller -->
           <div class="qt-lot-controller">
             <button type="button" class="btn-lot-step" id="btn-qt-lot-minus" title="Kurangi 0.01 Lot">−</button>
             <div class="lot-input-wrapper">
@@ -394,24 +400,17 @@
             <button type="button" class="btn-lot-step" id="btn-qt-lot-plus" title="Tambah 0.01 Lot">+</button>
           </div>
 
-          <!-- Spread Pill Badge -->
-          <div class="spread-indicator-pill" id="qt-spread-badge">
-            <span class="spread-dot"></span>
-            <span class="spread-val" id="qt-spread-val">-- pts</span>
-            <span id="qt-active-symbol-label" style="display: none;">EURUSD</span>
-          </div>
-
-          <!-- Massive Primary Flame Orange BUY Pill -->
+          <!-- KANAN: Massive Primary Flame Orange BUY Pill -->
           <button type="button" class="btn-screen3-buy" id="btn-quick-buy">
             <span class="trade-action-name">Buy</span>
             <span class="trade-action-price" id="qt-ask-price">--.---</span>
           </button>
 
-          <!-- Charcoal SELL Pill -->
-          <button type="button" class="btn-screen3-sell" id="btn-quick-sell">
-            <span class="trade-action-name">Sell</span>
-            <span class="trade-action-price" id="qt-bid-price">--.---</span>
-          </button>
+          <!-- Hidden telemetry elements for JS background polling (points badge cleaned from UI) -->
+          <div style="display: none;" aria-hidden="true" id="qt-spread-badge">
+            <span id="qt-spread-val">-- pts</span>
+            <span id="qt-active-symbol-label">EURUSD</span>
+          </div>
 
         </div>
 
@@ -1087,6 +1086,6 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Main JavaScript Controller -->
-  <script src="/static/app.js?v=8.0"></script>
+  <script src="/static/app.js?v=8.1"></script>
 </body>
 </html>

@@ -52,6 +52,9 @@
   --shadow-dock: 0 12px 36px rgba(0, 0, 0, 0.8);
   --shadow-orange: 0 6px 20px rgba(255, 85, 0, 0.35);
 
+  /* Header & Navigation Metrics */
+  --header-height: 59px;
+
   /* Transitions */
   --trans-fast: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   --trans-smooth: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1302,19 +1305,23 @@ button {
 }
 
 /* ===================================================================
-   TOP QUICK TRADE EXECUTION BAR (Placed neatly above chart)
+   TOP QUICK TRADE EXECUTION BAR (Sticky, Left: Sell | Center: Lot | Right: Buy)
    =================================================================== */
 .top-trade-execution-card,
 .screen3-trade-dock {
-  position: relative;
+  position: sticky;
+  top: var(--header-height, 59px);
+  z-index: 95;
   width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border-hairline);
+  background: rgba(19, 20, 26, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card-sm);
-  box-shadow: var(--shadow-card);
-  padding: 12px 18px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.75);
+  padding: 10px 16px;
   display: grid;
-  grid-template-columns: auto auto 1fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 12px;
   margin: 0;
@@ -1322,12 +1329,15 @@ button {
 }
 
 .qt-lot-controller {
+  grid-column: 2 / 3;
+  justify-self: center;
   display: inline-flex;
   align-items: center;
   background: var(--bg-input);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-pill);
-  padding: 2px;
+  padding: 3px 6px;
+  flex-shrink: 0;
 }
 
 .btn-lot-step {
@@ -1392,8 +1402,9 @@ button {
   background: var(--accent-orange);
 }
 
-/* Primary Flame Orange BUY Button (Screen 3) */
+/* Primary Flame Orange BUY Button (Screen 3: KANAN) */
 .btn-screen3-buy {
+  grid-column: 3 / 4;
   background: var(--accent-orange);
   color: #fff;
   border-radius: var(--radius-pill);
@@ -1401,8 +1412,11 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   box-shadow: var(--shadow-orange);
   transition: var(--trans-fast);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-screen3-buy:hover {
@@ -1414,8 +1428,9 @@ button {
   transform: translateY(1px);
 }
 
-/* Charcoal SELL Button (Screen 3) */
+/* Charcoal SELL Button (Screen 3: KIRI) */
 .btn-screen3-sell {
+  grid-column: 1 / 2;
   background: var(--bg-pill);
   border: 1px solid var(--border-hairline);
   color: #fff;
@@ -1424,12 +1439,16 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   transition: var(--trans-fast);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-screen3-sell:hover {
   background: var(--bg-pill-hover);
   border-color: rgba(239, 68, 68, 0.4);
+  transform: translateY(-1px);
 }
 
 .btn-screen3-sell:active {
@@ -2325,38 +2344,64 @@ button {
     gap: 8px;
   }
 
-  /* Top Terminal Execution Card on Mobile */
+  /* Top Terminal Execution Card on Mobile: Left Sell, Center Lot, Right Buy (Sticky) */
   .top-trade-execution-card,
   .screen3-trade-dock {
-    position: relative;
+    position: sticky;
+    top: var(--header-height, 55px);
+    z-index: 95;
     left: auto;
     right: auto;
     bottom: auto;
     width: 100%;
     transform: none;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding: 10px 12px;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 6px;
+    padding: 8px 10px;
     border-radius: var(--radius-inner);
   }
 
-  .qt-lot-controller {
+  .btn-screen3-sell {
     grid-column: 1 / 2;
+    padding: 8px 10px;
+    gap: 4px;
   }
 
-  .spread-indicator-pill {
+  .qt-lot-controller {
     grid-column: 2 / 3;
-    justify-content: center;
+    justify-self: center;
+    padding: 2px 4px;
   }
 
   .btn-screen3-buy {
-    grid-column: 1 / 2;
-    padding: 10px 14px;
+    grid-column: 3 / 4;
+    padding: 8px 10px;
+    gap: 4px;
   }
 
-  .btn-screen3-sell {
-    grid-column: 2 / 3;
-    padding: 10px 14px;
+  .trade-action-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .trade-action-price {
+    font-size: 0.80rem;
+    font-weight: 700;
+  }
+
+  .btn-lot-step {
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
+  }
+
+  #qt-lot-input {
+    width: 36px;
+    font-size: 0.82rem;
+  }
+
+  .lot-unit-label {
+    font-size: 0.60rem;
   }
 
   .settings-cards-grid {
@@ -2430,9 +2475,10 @@ button {
 
   .top-trade-execution-card,
   .screen3-trade-dock {
-    grid-template-columns: auto auto 1fr 1fr;
-    gap: 14px;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
     padding: 12px 18px;
+    top: var(--header-height, 59px);
     bottom: auto;
   }
 }
