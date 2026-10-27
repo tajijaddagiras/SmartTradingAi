@@ -623,7 +623,7 @@ async def get_logs():
     }
 
 
-def start_ui_server(host: str = "127.0.0.1", port: int = 8899):
+def start_ui_server(host: str = "0.0.0.0", port: int = 8899):
     """Runs the FastAPI server using Uvicorn."""
     import uvicorn
     logger.info(f"🌐 Launching NexusTrade Zen UI at http://{host}:{port}")

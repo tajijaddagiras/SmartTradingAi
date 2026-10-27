@@ -63,6 +63,7 @@ def main():
     parser.add_argument("--symbol", type=str, default="EURUSD", help="Symbol for backtest (default: EURUSD)")
     parser.add_argument("--bars", type=int, default=500, help="Number of historical candles for backtest (default: 500)")
     parser.add_argument("--port", type=int, default=8899, help="Port for the UI dashboard (default: 8899)")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host interface for the UI dashboard (default: 0.0.0.0)")
     args = parser.parse_args()
 
     print(BANNER)
@@ -73,8 +74,8 @@ def main():
     if args.ui:
         free_port_if_in_use(args.port)
         from ui.server import start_ui_server
-        logger.info(f"Starting Zen Desktop Dashboard at http://127.0.0.1:{args.port}...")
-        start_ui_server(host="127.0.0.1", port=args.port)
+        logger.info(f"Starting Zen Desktop Dashboard at http://{args.host}:{args.port}...")
+        start_ui_server(host=args.host, port=args.port)
         return
 
     # Mode 2: Emergency Flat All
