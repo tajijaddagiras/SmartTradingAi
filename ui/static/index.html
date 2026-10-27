@@ -3,634 +3,917 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-  <title>NexusTrade AI — Desktop Automated Trading System</title>
-  <meta name="description" content="NexusTrade AI - Sistem trading mandiri berkonsep institusi dengan Triple Confluence, Smart Trailing, dan Server-Side Hard SL">
+  <title>NexusTrade AI — Institutional Crypto & Forex Automated Terminal</title>
+  <meta name="description" content="NexusTrade AI - Terminal trading mandiri berkonsep institusi dengan Confluence Scanner, Smart Trailing, dan Server-Side Hard SL">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="/static/index.css?v=5.0">
-  <script src="/static/libs/lightweight-charts.js?v=5.0"></script>
+  
+  <!-- Modern Clean Typography (Google Fonts Plus Jakarta Sans & JetBrains Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/index.css?v=6.0">
+  <script src="/static/libs/lightweight-charts.js?v=6.0"></script>
 </head>
-<body>
+<body class="shakuro-theme">
 
-  <!-- Top App Navigation (Header Bersih & Profesional) -->
-  <header>
-    <div class="brand">
-      <div class="brand-icon">NT</div>
-      <div class="brand-text">
-        <h1>NexusTrade AI <span class="badge-tag">Zen Mode</span></h1>
+  <!-- =========================================================================
+       SCREEN 1: WELCOME / ONBOARDING MODAL (Inspired by Shakuro Screen 1)
+       ========================================================================= -->
+  <div class="welcome-overlay" id="welcome-modal">
+    <div class="welcome-card">
+      <div class="welcome-visual">
+        <div class="abstract-orb"></div>
+        <div class="welcome-tag">Institutional AI v5.0</div>
+      </div>
+      <div class="welcome-content">
+        <h1 class="welcome-headline">Crypto & FX<br>Just Got Easier!</h1>
+        <p class="welcome-subline">Experience seamless automated trading and institutional risk management directly connected to MetaTrader 5.</p>
+        <div class="welcome-actions">
+          <button type="button" class="btn-hero-orange" id="btn-welcome-start">Get Started</button>
+          <button type="button" class="btn-subtle-link" id="btn-welcome-login">Connect MT5 Broker</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       TOP GLOBAL HEADER (Screen 2 Top Bar: Avatar, Greeting, Quick Actions)
+       ========================================================================= -->
+  <header class="app-header">
+    <div class="header-left">
+      <!-- Profile Bar from Screen 2 -->
+      <div class="user-profile-badge" id="btn-open-profile-card" title="Profil Akun & MT5 Live">
+        <div class="avatar-ring">
+          <div class="avatar-inner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+        </div>
+        <div class="user-info">
+          <div class="user-greeting">Hello, Trader!</div>
+          <div class="user-subtext" id="header-user-account">MT5 Live Terminal</div>
+        </div>
       </div>
     </div>
 
-    <!-- Ultra-Compact Quick Trade Toolbar (Polosan Button - Single Flat Row) -->
-    <div class="quick-trade-bar" id="quick-trade-bar">
-      <!-- SELL Button -->
-      <button type="button" class="btn-qt-trade btn-qt-sell" id="btn-quick-sell" title="Buka Posisi SELL Seketika">
-        <span class="qt-action-text">SELL</span>
-        <span class="qt-price-text" id="qt-bid-price">--.---</span>
+    <!-- Center/Right Quick Action Strip -->
+    <div class="header-right">
+      <!-- Currency Switcher Pill (IDR / USD) -->
+      <button type="button" class="pill-badge-btn" id="btn-currency-toggle" title="Ganti Tampilan Mata Uang (USD / IDR)">
+        <span id="curr-toggle-flag">🇮🇩</span>
+        <span id="curr-toggle-text">IDR (Rp)</span>
       </button>
 
-      <!-- Middle: Lot Controller -->
-      <div class="qt-lot-controller">
-        <button type="button" class="btn-qt-step" id="btn-qt-lot-minus" title="Kurangi 0.01 Lot">−</button>
-        <input type="number" id="qt-lot-input" value="0.01" step="0.01" min="0.01" max="10.0" title="Ketik Lot Manual">
-        <button type="button" class="btn-qt-step" id="btn-qt-lot-plus" title="Tambah 0.01 Lot">+</button>
+      <!-- Bot Toggle Button (Pill style matching reference) -->
+      <button type="button" class="pill-btn-action" id="btn-toggle-bot">
+        <span class="bot-status-icon">▶</span>
+        <span class="bot-btn-label">Start Bot</span>
+      </button>
+
+      <!-- System Telemetry Micro-Pills -->
+      <div class="status-capsule" id="mt5-status-pill" title="Status MetaTrader 5">
+        <span class="pulse-dot" id="mt5-status-dot"></span>
+        <span id="mt5-status-text">MT5: Connecting...</span>
       </div>
 
-      <!-- BUY Button -->
-      <button type="button" class="btn-qt-trade btn-qt-buy" id="btn-quick-buy" title="Buka Posisi BUY Seketika">
-        <span class="qt-action-text">BUY</span>
-        <span class="qt-price-text" id="qt-ask-price">--.---</span>
-      </button>
-
-      <!-- Live Spread Micro-Pill -->
-      <div class="qt-spread-pill" id="qt-spread-badge" title="Live Spread & Pair">
-        <span class="spread-dot"></span>
-        <span id="qt-spread-val">-- pts</span>
-        <span id="qt-active-symbol-label" style="display: none;">EURUSD</span>
+      <div class="status-capsule" id="anti-sleep-pill" title="Anti-Sleep VPS Guard">
+        <span class="pulse-dot" id="anti-sleep-dot"></span>
+        <span id="anti-sleep-text">Anti-Sleep: Idle</span>
       </div>
-    </div>
 
-    <div class="header-actions">
-      <button class="btn btn-outline" id="btn-currency-toggle" title="Ganti Tampilan Mata Uang (USD / IDR)" style="padding: 7px 14px; font-weight: 600;">
-        <span id="curr-toggle-flag">🇮🇩</span> <span id="curr-toggle-text">IDR (Rp)</span>
+      <div class="status-capsule" id="circuit-breaker-pill" title="Proteksi Drawdown">
+        <span id="circuit-breaker-text">Drawdown: Safe</span>
+        <button id="btn-reset-dd-header" class="btn-mini-reset" title="Buka Kunci Bot" style="display: none;">Reset</button>
+      </div>
+
+      <!-- Notification Bell Pill (Matching Screen 2 & 3 Top Right) -->
+      <button type="button" class="icon-round-btn" id="btn-header-bell" title="Notifikasi Sistem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
       </button>
-      <button class="btn btn-primary" id="btn-toggle-bot">▶ Start Bot</button>
+
+      <!-- Hidden Helper for Sync -->
+      <span id="val-server" style="display: none;">Server: Disconnected</span>
+      <span id="val-timeframe" style="display: none;">Timeframe: M15</span>
     </div>
   </header>
 
-  <!-- Main Multi-View SPA Container -->
-  <main>
-    <!-- =========================================================================
-         HALAMAN 1: CHART (DIAGRAM CANDLESTICK & CONFLUENCE RADAR)
-         ========================================================================= -->
-    <section id="view-chart" class="app-view active">
-      <!-- Top Strip: Financial Telemetry Ringkas -->
-      <div class="metrics-strip">
-        <div class="metric-card glass-panel">
-          <div class="title">Balance</div>
-          <div class="value" id="val-balance">$0.00</div>
-          <div class="subtext" id="val-server">Server: Disconnected</div>
-        </div>
+  <!-- =========================================================================
+       MAIN APPLICATION WORKSPACE (Multi-View Single Page Application)
+       ========================================================================= -->
+  <main class="app-main">
 
-        <div class="metric-card glass-panel">
-          <div class="title">Equity</div>
-          <div class="value" id="val-equity">$0.00</div>
-          <div class="subtext" id="val-floating-profit">Floating: $0.00</div>
-        </div>
-
-        <div class="metric-card glass-panel">
-          <div class="title">Free Margin</div>
-          <div class="value" id="val-free-margin">$0.00</div>
-          <div class="subtext" id="val-margin-level">Margin Level: 0.00%</div>
-        </div>
-
-        <div class="metric-card glass-panel">
-          <div class="title">Trading Mode</div>
-          <div class="value" id="val-trade-mode" style="color: var(--accent-cyan);">DEMO</div>
-          <div class="subtext" id="val-timeframe">Timeframe: M15</div>
-        </div>
-      </div>
-
-      <!-- System Health & Safety Guard Strip (MT5, Anti-Sleep, Circuit Breaker) -->
-      <div class="system-status-strip">
-        <div class="status-pill" id="mt5-status-pill">
-          <span class="pulse-dot" id="mt5-status-dot"></span>
-          <span id="mt5-status-text">Connecting MT5...</span>
-        </div>
-
-        <div class="status-pill" id="anti-sleep-pill">
-          <span class="pulse-dot" id="anti-sleep-dot"></span>
-          <span id="anti-sleep-text">Anti-Sleep: Idle</span>
-        </div>
-
-        <div class="status-pill" id="circuit-breaker-pill">
-          <span id="circuit-breaker-text">Drawdown: Safe</span>
-          <button id="btn-reset-dd-header" class="btn-mini-reset" title="Buka Kunci Bot / Reset Drawdown" style="display: none; background: transparent; border: 1px solid var(--accent-red); color: var(--accent-red); padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; margin-left: 6px;">🔄 Reset</button>
-        </div>
-      </div>
-
-      <!-- Live Interactive Trading Chart Section -->
-      <div class="chart-panel glass-panel">
-        <div class="chart-header">
-          <div class="chart-controls-left">
-            <div class="symbol-selector" id="chart-symbol-selector">
-              <button class="symbol-btn active" data-symbol="EURUSD">EURUSD</button>
-              <button class="symbol-btn" data-symbol="GBPUSD">GBPUSD</button>
-              <button class="symbol-btn" data-symbol="XAUUSD">XAUUSD</button>
-              <button class="symbol-btn" data-symbol="ALL" title="Tradingkan ketiga aset sekaligus">🌐 Semua Pair</button>
+    <!-- =======================================================================
+         VIEW 1: HOME / DASHBOARD (Exact Screen 2: Hero Portfolio & My Funds)
+         ======================================================================= -->
+    <section id="view-home" class="app-view active">
+      <div class="dashboard-container">
+        
+        <!-- HERO MAIN PORTFOLIO CARD (Matching Screen 2 Center Hero) -->
+        <div class="portfolio-hero-card">
+          <div class="portfolio-hero-top">
+            <div class="portfolio-meta">
+              <span class="portfolio-label">MAIN PORTFOLIO</span>
+              <div class="portfolio-balance-wrap">
+                <h2 class="portfolio-balance" id="val-balance">$0.00</h2>
+              </div>
             </div>
-            <div class="tf-selector" id="chart-tf-selector">
-              <button class="tf-btn" data-tf="M5">M5</button>
-              <button class="tf-btn active" data-tf="M15">M15</button>
-              <button class="tf-btn" data-tf="H1">H1</button>
-            </div>
-            <div id="chart-bot-sync-indicator" style="font-size: 0.72rem; color: var(--accent-cyan); background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
-              <span class="pulse-dot" style="width: 6px; height: 6px; background: var(--accent-cyan);"></span>
-              <span>Bot Aktif: <b id="chart-sync-summary">EURUSD (M15)</b></span>
-            </div>
-            <div class="chart-legend" id="chart-ohlc-legend">
-              <span>O: <span class="leg-val" id="leg-open">-</span></span>
-              <span>H: <span class="leg-val" id="leg-high">-</span></span>
-              <span>L: <span class="leg-val" id="leg-low">-</span></span>
-              <span>C: <span class="leg-val" id="leg-close">-</span></span>
+            
+            <div class="portfolio-pnl-badge">
+              <div class="pnl-amount" id="val-floating-profit">Floating: $0.00</div>
+              <div class="pnl-percent" id="val-pnl-pct">+0.00%</div>
             </div>
           </div>
 
-          <div class="chart-indicators-legend">
-            <span><span class="ind-dot" style="background: #06b6d4;"></span>EMA 50</span>
-            <span><span class="ind-dot" style="background: #10b981;"></span>Bullish OB / Support</span>
-            <span><span class="ind-dot" style="background: #f43f5e;"></span>Bearish OB / Resistance</span>
-            <span><span class="ind-dot" style="background: #ef4444;"></span>Hard SL</span>
-            <button id="btn-toggle-vol" class="tf-btn" style="background: rgba(255,255,255,0.06); cursor: pointer; border: 1px solid var(--border-subtle); padding: 3px 8px; border-radius: 4px; color: var(--text-muted);">📊 Vol: ON</button>
+          <!-- Secondary Telemetry Row -->
+          <div class="portfolio-telemetry-row">
+            <div class="tele-item">
+              <span class="tele-lbl">Equity</span>
+              <span class="tele-val" id="val-equity">$0.00</span>
+            </div>
+            <div class="tele-item">
+              <span class="tele-lbl">Free Margin</span>
+              <span class="tele-val" id="val-free-margin">$0.00</span>
+            </div>
+            <div class="tele-item">
+              <span class="tele-lbl">Margin Level</span>
+              <span class="tele-val" id="val-margin-level">0.0%</span>
+            </div>
+            <div class="tele-item">
+              <span class="tele-lbl">Mode</span>
+              <span class="tele-val mode-highlight" id="val-trade-mode">DEMO</span>
+            </div>
+          </div>
+
+          <!-- Hero Action Pills: Withdraw / Deposit equivalent in reference -->
+          <div class="portfolio-actions-row">
+            <button type="button" class="btn-hero-pill" id="btn-hero-currency-switch">
+              <span class="hero-pill-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <polyline points="19 12 12 19 5 12"></polyline>
+                </svg>
+              </span>
+              <span id="hero-currency-label">Mata Uang: IDR (Rp)</span>
+            </button>
+
+            <button type="button" class="btn-hero-pill" id="btn-hero-bot-action">
+              <span class="hero-pill-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span id="hero-bot-label">Start Bot Engine</span>
+            </button>
           </div>
         </div>
 
-        <div class="chart-canvas-wrap">
-          <div id="tv-chart-container"></div>
-        </div>
-      </div>
+        <!-- "MY FUNDS" SECTION (Matching Screen 2 Horizontal Carousel) -->
+        <div class="funds-section">
+          <div class="section-title-row">
+            <h3 class="section-heading">MY FUNDS</h3>
+            <button type="button" class="link-subtle" id="btn-funds-view-all">View all &rsaquo;</button>
+          </div>
 
-      <!-- Confluence Radar (3-Factor AI Live Scanner) -->
-      <div class="glass-panel" style="padding: 22px;">
-        <div class="section-header">
-          <div class="section-title">🎯 Confluence Radar (3-Factor AI Realtime Scanner)</div>
-          <span class="badge-tag">Live Scanner</span>
-        </div>
-        <div class="signals-list" id="signals-container">
-          <div style="color: var(--text-dim); font-size: 0.85rem; padding: 20px 0; text-align: center;">
-            Memindai struktur pasar dan konfluensi SMC...
+          <div class="funds-carousel" id="funds-carousel-list">
+            <!-- Add / Customize Card -->
+            <div class="fund-card add-card" id="btn-add-symbol" title="Pilih Semua Pair">
+              <div class="add-icon-wrap">+</div>
+            </div>
+
+            <!-- EURUSD Card (Bitcoin equivalent in Screen 2) -->
+            <div class="fund-card active" data-symbol="EURUSD">
+              <div class="fund-card-top">
+                <div class="fund-icon eur-icon">
+                  <span>€</span>
+                </div>
+                <div class="fund-titles">
+                  <div class="fund-name">Euro</div>
+                  <div class="fund-ticker">EURUSD</div>
+                </div>
+              </div>
+              <div class="fund-sparkline">
+                <svg viewBox="0 0 100 28" fill="none" class="spark-green">
+                  <path d="M0 20 Q 25 24, 45 14 T 75 8 T 100 4" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="fund-card-bottom">
+                <div class="fund-price" id="fund-price-eurusd">1.08450</div>
+                <div class="fund-change positive">+0.45%</div>
+              </div>
+            </div>
+
+            <!-- GBPUSD Card (Ethereum equivalent in Screen 2) -->
+            <div class="fund-card" data-symbol="GBPUSD">
+              <div class="fund-card-top">
+                <div class="fund-icon gbp-icon">
+                  <span>£</span>
+                </div>
+                <div class="fund-titles">
+                  <div class="fund-name">British Pound</div>
+                  <div class="fund-ticker">GBPUSD</div>
+                </div>
+              </div>
+              <div class="fund-sparkline">
+                <svg viewBox="0 0 100 28" fill="none" class="spark-green">
+                  <path d="M0 18 Q 20 22, 50 12 T 80 6 T 100 3" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="fund-card-bottom">
+                <div class="fund-price" id="fund-price-gbpusd">1.29820</div>
+                <div class="fund-change positive">+0.16%</div>
+              </div>
+            </div>
+
+            <!-- XAUUSD / Gold Card -->
+            <div class="fund-card" data-symbol="XAUUSD">
+              <div class="fund-card-top">
+                <div class="fund-icon gold-icon">
+                  <span>Au</span>
+                </div>
+                <div class="fund-titles">
+                  <div class="fund-name">Gold Spot</div>
+                  <div class="fund-ticker">XAUUSD</div>
+                </div>
+              </div>
+              <div class="fund-sparkline">
+                <svg viewBox="0 0 100 28" fill="none" class="spark-orange">
+                  <path d="M0 10 Q 30 5, 55 18 T 85 12 T 100 22" stroke="var(--accent-orange)" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="fund-card-bottom">
+                <div class="fund-price" id="fund-price-xauusd">2,735.40</div>
+                <div class="fund-change positive">+1.85%</div>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- CATEGORY TABS (Matching Screen 2: Most Popular, Biggest Movers, Recommended) -->
+        <div class="category-tabs-row">
+          <button type="button" class="cat-tab active" data-tab="popular">Most popular</button>
+          <button type="button" class="cat-tab" data-tab="movers">Biggest movers</button>
+          <button type="button" class="cat-tab" data-tab="radar">AI Confluence</button>
+        </div>
+
+        <!-- WATCHLIST ROWS (Matching Screen 2 list below tabs) -->
+        <div class="watchlist-container" id="watchlist-items-list">
+          <!-- EURUSD Item -->
+          <div class="watchlist-row" data-symbol="EURUSD">
+            <div class="wl-left">
+              <div class="wl-icon eur-icon">€</div>
+              <div class="wl-names">
+                <div class="wl-title">Euro / US Dollar</div>
+                <div class="wl-symbol">EURUSD • M15</div>
+              </div>
+            </div>
+            <div class="wl-chart">
+              <svg viewBox="0 0 60 20" fill="none">
+                <path d="M0 15 Q 15 18, 30 10 T 60 5" stroke="var(--accent-green)" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="wl-right">
+              <div class="wl-price" id="wl-price-eurusd">1.08450</div>
+              <div class="wl-change positive">+0.45%</div>
+            </div>
+          </div>
+
+          <!-- GBPUSD Item -->
+          <div class="watchlist-row" data-symbol="GBPUSD">
+            <div class="wl-left">
+              <div class="wl-icon gbp-icon">£</div>
+              <div class="wl-names">
+                <div class="wl-title">Pound Sterling</div>
+                <div class="wl-symbol">GBPUSD • M15</div>
+              </div>
+            </div>
+            <div class="wl-chart">
+              <svg viewBox="0 0 60 20" fill="none">
+                <path d="M0 14 Q 20 18, 40 8 T 60 4" stroke="var(--accent-green)" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="wl-right">
+              <div class="wl-price" id="wl-price-gbpusd">1.29820</div>
+              <div class="wl-change positive">+0.16%</div>
+            </div>
+          </div>
+
+          <!-- XAUUSD Item -->
+          <div class="watchlist-row" data-symbol="XAUUSD">
+            <div class="wl-left">
+              <div class="wl-icon gold-icon">Au</div>
+              <div class="wl-names">
+                <div class="wl-title">Gold Spot / USD</div>
+                <div class="wl-symbol">XAUUSD • M15</div>
+              </div>
+            </div>
+            <div class="wl-chart">
+              <svg viewBox="0 0 60 20" fill="none">
+                <path d="M0 8 Q 20 4, 35 15 T 60 18" stroke="var(--accent-orange)" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="wl-right">
+              <div class="wl-price" id="wl-price-xauusd">2,735.40</div>
+              <div class="wl-change negative">-0.32%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3-FACTOR AI CONFLUENCE RADAR PANEL -->
+        <div class="radar-section">
+          <div class="section-title-row">
+            <h3 class="section-heading">AI CONFLUENCE SCANNER</h3>
+            <span class="badge-tag">3-Factor Confluence</span>
+          </div>
+          <div class="signals-list" id="signals-container">
+            <div class="empty-loading-text">
+              Memindai struktur pasar dan konfluensi SMC...
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <!-- =========================================================================
-         HALAMAN 2: TRADE (TAMPILAN HASIL LIFE PERSIS SEPERTI GAMBAR MT5 MOBILE)
-         ========================================================================= -->
-    <section id="view-trade" class="app-view" style="display: none;">
-      <!-- MT5 Mobile Inspired Financial Telemetry -->
-      <div class="glass-panel mt5-summary-card">
-        <div class="mt5-card-header">
-          <div class="mt5-account-title">
-            <span class="mt5-acc-icon">📊</span>
-            <span>Ringkasan Saldo & Margin Akun</span>
+    <!-- =======================================================================
+         VIEW 2: CHART & LIVE EXECUTION (Exact Screen 3 Detail / Terminal)
+         ======================================================================= -->
+    <section id="view-chart" class="app-view">
+      <div class="chart-screen-container">
+        
+        <!-- Screen 3 Header: Big Pair Ticker, Massive Price, and 24h Change Badge -->
+        <div class="screen3-header">
+          <div class="ticker-price-block">
+            <div class="active-ticker-label" id="chart-active-pair-name">EURUSD</div>
+            <div class="active-hero-price" id="chart-hero-price">1.08450</div>
           </div>
-          <span class="badge-tag" id="trade-view-acc-login">MT5 Live</span>
-        </div>
-
-        <div class="mt5-telemetry-body">
-          <div class="mt5-summary-row">
-            <span class="mt5-label">Saldo:</span>
-            <div class="mt5-dots"></div>
-            <span class="mt5-val" id="trade-val-saldo">0.00</span>
-          </div>
-
-          <div class="mt5-summary-row">
-            <span class="mt5-label">Equity:</span>
-            <div class="mt5-dots"></div>
-            <span class="mt5-val" id="trade-val-equity">0.00</span>
-          </div>
-
-          <div class="mt5-summary-row">
-            <span class="mt5-label">Margin:</span>
-            <div class="mt5-dots"></div>
-            <span class="mt5-val" id="trade-val-margin">0.00</span>
-          </div>
-
-          <div class="mt5-summary-row">
-            <span class="mt5-label">Margin Bebas:</span>
-            <div class="mt5-dots"></div>
-            <span class="mt5-val" id="trade-val-margin-bebas">0.00</span>
-          </div>
-
-          <div class="mt5-summary-row">
-            <span class="mt5-label">Level Margin (%):</span>
-            <div class="mt5-dots"></div>
-            <span class="mt5-val" id="trade-val-level-margin">0.00%</span>
-          </div>
-
-          <div class="mt5-summary-row" style="margin-bottom: 0;">
-            <span class="mt5-label">Total Floating Profit:</span>
-            <div class="mt5-dots"></div>
-            <span class="mt5-val highlight-profit" id="trade-val-floating">+0.00</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- MT5 Mobile Inspired Positions List ("Posisi") -->
-      <div class="glass-panel mt5-positions-card">
-        <div class="mt5-pos-header">
-          <div class="mt5-pos-title">
-            <span>Posisi</span>
-            <span class="badge-tag" id="trade-pos-count-tag">0 Posisi</span>
-          </div>
-          <div class="mt5-pos-actions">
-            <button class="btn btn-outline" id="btn-refresh-positions" style="padding: 5px 12px; font-size: 0.78rem;">🔄 Refresh</button>
-            <button class="btn btn-danger" id="btn-trade-flat-all" style="padding: 5px 14px; font-size: 0.78rem;">⚡ Tutup Semua (Flat All)</button>
-          </div>
-        </div>
-
-        <!-- Vertically Stacked Positions List (Matching MT5 Mobile Reels) -->
-        <div class="mt5-positions-list" id="mt5-positions-container">
-          <div class="empty-state-card">
-            <div class="empty-icon">📈</div>
-            <div class="empty-text">Tidak ada posisi terbuka saat ini.</div>
-            <div class="empty-subtext">Bot sedang memantau pasar. Saat sinyal konfluensi tercapai, posisi akan otomatis terbuka dan muncul di sini.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================================================================
-         HALAMAN 3: HISTORY (HALAMAN SENDIRI RIWAYAT TRANSAKSI DITUTUP)
-         ========================================================================= -->
-    <section id="view-history" class="app-view" style="display: none;">
-      <!-- History Summary Strip -->
-      <div class="metrics-strip">
-        <div class="metric-card glass-panel">
-          <div class="title">Total Realized P&L</div>
-          <div class="value" id="hist-total-pnl">$0.00</div>
-          <div class="subtext">Akumulasi hasil transaksi yang telah ditutup</div>
-        </div>
-
-        <div class="metric-card glass-panel">
-          <div class="title">Total Transaksi Selesai</div>
-          <div class="value" id="hist-total-deals">0 Deals</div>
-          <div class="subtext" id="hist-winloss-ratio">0 Menang / 0 Kalah</div>
-        </div>
-
-        <div class="metric-card glass-panel">
-          <div class="title">Win Rate Realisasi</div>
-          <div class="value" id="hist-winrate" style="color: var(--accent-green);">0%</div>
-          <div class="subtext">Berdasarkan riwayat deals MetaTrader 5</div>
-        </div>
-
-        <div class="metric-card glass-panel" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end;">
-          <button class="btn btn-outline" id="btn-refresh-history" style="padding: 8px 16px; font-size: 0.82rem;">🔄 Muat Ulang Riwayat</button>
-        </div>
-      </div>
-
-      <!-- Closed Deals Table -->
-      <div class="glass-panel" style="padding: 22px;">
-        <div class="section-header">
-          <div class="section-title">📜 Riwayat Transaksi MT5 (Closed Deals)</div>
-          <span class="badge-tag">Riwayat Transaksi</span>
-        </div>
-
-        <div class="table-container" style="max-height: 520px; overflow-y: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Deal Ticket</th>
-                <th>Pair / Simbol</th>
-                <th>Tipe</th>
-                <th>Volume (Lot)</th>
-                <th>Harga Eksekusi</th>
-                <th>Profit / Loss</th>
-                <th>Waktu Penutupan</th>
-              </tr>
-            </thead>
-            <tbody id="page-history-tbody">
-              <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px 0;">
-                  Memuat data riwayat transaksi dari MetaTrader 5...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================================================================
-         HALAMAN 4: SETTING (HALAMAN SENDIRI, BUKAN POPUP/MODAL)
-         ========================================================================= -->
-    <section id="view-settings" class="app-view" style="display: none;">
-      <!-- Top Strip: Ringkasan Status Pengaturan Aktif (Konsisten dengan Chart & History) -->
-      <div class="metrics-strip">
-        <div class="metric-card glass-panel">
-          <div class="title">Mode Eksekusi</div>
-          <div class="value" id="settings-summary-mode" style="color: var(--accent-cyan);">DEMO</div>
-          <div class="subtext" id="settings-summary-tf">Timeframe: M15</div>
-        </div>
-
-        <div class="metric-card glass-panel">
-          <div class="title">Aset Aktif</div>
-          <div class="value" id="settings-summary-symbols" style="color: #fff;">3 Pairs</div>
-          <div class="subtext">EURUSD, GBPUSD, XAUUSD</div>
-        </div>
-
-        <div class="metric-card glass-panel">
-          <div class="title">Aturan Risiko</div>
-          <div class="value" id="settings-summary-lot" style="color: var(--accent-green);">0.01 Lot</div>
-          <div class="subtext" id="settings-summary-dd">Max DD: 3.0%</div>
-        </div>
-
-        <div class="metric-card glass-panel">
-          <div class="title">Konfluensi AI</div>
-          <div class="value" id="settings-summary-score" style="color: #38bdf8;">3 / 3 Factors</div>
-          <div class="subtext">EMA50 + SMC + Structure</div>
-        </div>
-      </div>
-
-      <!-- Main Settings Form Container (Full Width 100%) -->
-      <form id="form-page-settings" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
-        <div class="settings-grid">
-          <!-- Card 1: Akun & Mode Eksekusi -->
-          <div class="glass-panel" style="padding: 22px;">
-            <div class="section-header">
-              <div class="section-title">💼 Akun & Mode Eksekusi</div>
-              <span class="badge-tag" id="settings-active-account-mode-tag">Demo Mode</span>
+          <div class="ticker-change-block">
+            <div class="screen3-change-badge" id="chart-hero-change">
+              <span class="change-delta">+0.00142</span>
+              <span class="change-pct">+0.45%</span>
             </div>
-
-            <!-- Active Account Indicator Bar -->
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-subtle); padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-              <div>
-                <div style="font-size: 0.74rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Akun MT5 Terhubung Saat Ini</div>
-                <div id="settings-active-account-badge" style="font-weight: 700; color: #fff; font-size: 0.95rem; margin-top: 2px;">
-                  Login: #-- | Server: --
-                </div>
-              </div>
-              <div id="settings-active-status-indicator" style="font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.3);">
-                DEMO SIMULASI
-              </div>
-            </div>
-
-            <!-- MT5 Account Switcher Box -->
-            <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%); border: 1px solid rgba(56, 189, 248, 0.2); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 18px;">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                <span style="font-size: 0.88rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
-                  🔑 Hubungkan Akun MT5 (Real / Demo Broker)
-                </span>
-                <span style="font-size: 0.72rem; color: var(--accent-cyan);">Instant Auto-Switch</span>
-              </div>
-              
-              <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="cfg-mt5-account" style="font-size: 0.78rem;">Nomor Akun MT5 (Login ID)</label>
-                  <input type="number" id="cfg-mt5-account" placeholder="Contoh: 114546076 / No. Akun Real" style="font-family: var(--font-mono); font-size: 0.86rem;">
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="cfg-mt5-password" style="font-size: 0.78rem;">Password MT5</label>
-                  <input type="password" id="cfg-mt5-password" placeholder="Password Trading Anda" style="font-family: var(--font-mono); font-size: 0.86rem;">
-                </div>
-              </div>
-
-              <div class="form-group" style="margin-bottom: 14px;">
-                <label for="cfg-mt5-server" style="font-size: 0.78rem;">Server Broker MT5</label>
-                <input type="text" id="cfg-mt5-server" list="mt5-server-list" placeholder="Ketik atau pilih server (misal Valetax-Live, Exness-Real, MetaQuotes-Demo)" style="font-family: var(--font-mono); font-size: 0.86rem;">
-                <datalist id="mt5-server-list">
-                  <option value="MetaQuotes-Demo">
-                  <option value="Valetax-Live">
-                  <option value="Valetax-Demo">
-                  <option value="Exness-Real">
-                  <option value="Exness-Real2">
-                  <option value="Exness-Real3">
-                  <option value="XMGlobal-Real">
-                  <option value="XMGlobal-Real2">
-                  <option value="MIFX-Live">
-                  <option value="ICMarketsSC-Live">
-                  <option value="OctaFX-Real">
-                </datalist>
-                <span style="font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; display: block;">
-                  💡 <i>Nama server persis seperti yang tertera di aplikasi MT5 atau email broker Anda.</i>
-                </span>
-              </div>
-
-              <button type="button" class="btn btn-primary" id="btn-switch-mt5-account" style="width: 100%; justify-content: center; padding: 10px 16px; font-weight: 600; font-size: 0.86rem; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);">
-                🔗 Hubungkan & Terapkan Akun MT5 Ini
+            <div class="screen3-actions">
+              <button type="button" class="icon-round-btn" id="btn-chart-bell" title="Alert Notifikasi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </button>
+              <button type="button" class="icon-round-btn" id="btn-chart-quick-settings" title="Pengaturan Chart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
               </button>
             </div>
+          </div>
+        </div>
 
-            <!-- Panduan Deposit & Penarikan Saldo Resmi Broker -->
-            <div style="background: rgba(245, 158, 11, 0.07); border: 1px solid rgba(245, 158, 11, 0.25); padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 16px;">
-              <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; color: var(--accent-amber); margin-bottom: 4px;">
-                <span>🛡️ Informasi Top Up (Deposit) & Tarik Tunai (Withdraw)</span>
-              </div>
-              <div style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.6;">
-                Sesuai standar keamanan industri finansial, deposit & penarikan dana hanya dapat dilakukan melalui <b>Member Area resmi Broker</b> Anda (seperti Valetax, Exness, XM, MIFX) menggunakan Bank Lokal / QRIS. Setelah Anda selesai melakukan deposit atau penarikan di broker, <b>saldo pada bot ini akan otomatis ter-update seketika</b> secara real-time!
-              </div>
+        <!-- Symbol Selector Pills (Screen 3 Subbar) -->
+        <div class="symbol-selector-strip" id="chart-symbol-selector">
+          <button type="button" class="symbol-btn active" data-symbol="EURUSD">EURUSD</button>
+          <button type="button" class="symbol-btn" data-symbol="GBPUSD">GBPUSD</button>
+          <button type="button" class="symbol-btn" data-symbol="XAUUSD">XAUUSD</button>
+          <button type="button" class="symbol-btn" data-symbol="ALL" title="Tradingkan 3 Pair Sekaligus">🌐 Semua Pair</button>
+          
+          <div class="sync-status-indicator" id="chart-bot-sync-indicator">
+            <span class="pulse-dot"></span>
+            <span id="chart-sync-summary">EURUSD (M15)</span>
+          </div>
+        </div>
+
+        <!-- TradingView Lightweight Chart Canvas Container -->
+        <div class="chart-canvas-wrapper">
+          <div id="tv-chart-container"></div>
+          
+          <!-- Legend Overlays -->
+          <div class="chart-legend-overlay">
+            <div class="chart-ohlc-values" id="chart-ohlc-legend">
+              <span>O: <b id="leg-open">-</b></span>
+              <span>H: <b id="leg-high">-</b></span>
+              <span>L: <b id="leg-low">-</b></span>
+              <span>C: <b id="leg-close">-</b></span>
+            </div>
+            <div class="chart-indicator-tags">
+              <span class="tag-ema"><span class="dot-ema"></span>EMA 50</span>
+              <span class="tag-ob-bull"><span class="dot-ob-bull"></span>Bullish OB</span>
+              <span class="tag-ob-bear"><span class="dot-ob-bear"></span>Bearish OB</span>
+              <span class="tag-sl"><span class="dot-sl"></span>Hard SL</span>
+              <button type="button" id="btn-toggle-vol" class="btn-micro-vol">📊 Vol: ON</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIMEFRAME CAPSULE SELECTOR (Matching Screen 3: D, W, M, 6M, Y, All) -->
+        <div class="timeframe-capsule-bar" id="chart-tf-selector">
+          <button type="button" class="tf-btn" data-tf="M5">M5</button>
+          <button type="button" class="tf-btn active" data-tf="M15">M15</button>
+          <button type="button" class="tf-btn" data-tf="H1">H1</button>
+          <button type="button" class="tf-btn" data-tf="H4">H4</button>
+          <button type="button" class="tf-btn" data-tf="D1">D1</button>
+        </div>
+
+        <!-- QUICK TRADE EXECUTION BAR (Exact Screen 3 Bottom Controls) -->
+        <div class="screen3-trade-dock" id="quick-trade-bar">
+          
+          <!-- Lot Stepper Controller -->
+          <div class="qt-lot-controller">
+            <button type="button" class="btn-lot-step" id="btn-qt-lot-minus" title="Kurangi 0.01 Lot">−</button>
+            <div class="lot-input-wrapper">
+              <input type="number" id="qt-lot-input" value="0.01" step="0.01" min="0.01" max="10.0" title="Lot Size">
+              <span class="lot-unit-label">LOT</span>
+            </div>
+            <button type="button" class="btn-lot-step" id="btn-qt-lot-plus" title="Tambah 0.01 Lot">+</button>
+          </div>
+
+          <!-- Spread Pill Badge -->
+          <div class="spread-indicator-pill" id="qt-spread-badge">
+            <span class="spread-dot"></span>
+            <span class="spread-val" id="qt-spread-val">-- pts</span>
+            <span id="qt-active-symbol-label" style="display: none;">EURUSD</span>
+          </div>
+
+          <!-- Massive Primary Flame Orange BUY Pill (Screen 3) -->
+          <button type="button" class="btn-screen3-buy" id="btn-quick-buy">
+            <span class="trade-action-name">Buy</span>
+            <span class="trade-action-price" id="qt-ask-price">--.---</span>
+          </button>
+
+          <!-- Charcoal SELL Pill (Screen 3) -->
+          <button type="button" class="btn-screen3-sell" id="btn-quick-sell">
+            <span class="trade-action-name">Sell</span>
+            <span class="trade-action-price" id="qt-bid-price">--.---</span>
+          </button>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 3: TRADE (MT5 Live Open Positions & Floating P&L)
+         ======================================================================= -->
+    <section id="view-trade" class="app-view">
+      <div class="trade-view-container">
+        
+        <!-- MT5 Live Account Summary Card -->
+        <div class="luxury-card mt5-summary-card">
+          <div class="card-head-row">
+            <div class="card-title-group">
+              <span class="card-icon-badge">📊</span>
+              <span class="card-title">Ringkasan Saldo & Margin Akun</span>
+            </div>
+            <span class="badge-tag" id="trade-view-acc-login">MT5 Live</span>
+          </div>
+
+          <div class="mt5-telemetry-body">
+            <div class="mt5-summary-row">
+              <span class="mt5-label">Saldo</span>
+              <div class="mt5-dots"></div>
+              <span class="mt5-val" id="trade-val-saldo">0.00</span>
             </div>
 
-            <div class="form-grid" style="grid-template-columns: 1fr; margin-bottom: 0;">
-              <div class="form-group" style="background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.25); padding: 14px; border-radius: var(--radius-sm);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="font-weight: 600; color: #fff; font-size: 0.85rem;">⚡ Pair & Timeframe Bot (Tersinkron Otomatis)</span>
-                  <span class="badge-tag" style="background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); font-size: 0.68rem;">Live Synced</span>
-                </div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">
-                  Pair yang di-trade: <b id="settings-sync-pairs" style="color: var(--accent-cyan);">EURUSD</b><br>
-                  Timeframe analisis: <b id="settings-sync-tf" style="color: var(--accent-cyan);">M15</b>
-                </div>
-                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 6px;">
-                  💡 <i>Cukup klik tombol tab Pair (EURUSD / GBPUSD / XAUUSD / Semua Pair) dan tombol Timeframe (M5 / M15 / H1) langsung di halaman Chart, sistem bot akan otomatis tersinkron seketika tanpa perlu bolak-balik ke menu Setting.</i>
-                </div>
+            <div class="mt5-summary-row">
+              <span class="mt5-label">Equity</span>
+              <div class="mt5-dots"></div>
+              <span class="mt5-val" id="trade-val-equity">0.00</span>
+            </div>
+
+            <div class="mt5-summary-row">
+              <span class="mt5-label">Margin</span>
+              <div class="mt5-dots"></div>
+              <span class="mt5-val" id="trade-val-margin">0.00</span>
+            </div>
+
+            <div class="mt5-summary-row">
+              <span class="mt5-label">Margin Bebas</span>
+              <div class="mt5-dots"></div>
+              <span class="mt5-val" id="trade-val-margin-bebas">0.00</span>
+            </div>
+
+            <div class="mt5-summary-row">
+              <span class="mt5-label">Level Margin (%)</span>
+              <div class="mt5-dots"></div>
+              <span class="mt5-val" id="trade-val-level-margin">0.00%</span>
+            </div>
+
+            <div class="mt5-summary-row total-floating-row">
+              <span class="mt5-label">Total Floating Profit</span>
+              <div class="mt5-dots"></div>
+              <span class="mt5-val highlight-profit" id="trade-val-floating">+0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Open Positions List (MT5 Mobile Inspired Stack) -->
+        <div class="luxury-card mt5-positions-card">
+          <div class="card-head-row">
+            <div class="card-title-group">
+              <span class="card-title">Posisi Terbuka</span>
+              <span class="badge-tag" id="trade-pos-count-tag">0 Posisi</span>
+            </div>
+            <div class="card-actions-group">
+              <button type="button" class="btn-subtle-sm" id="btn-refresh-positions">🔄 Refresh</button>
+              <button type="button" class="btn-danger-sm" id="btn-trade-flat-all">⚡ Tutup Semua (Flat All)</button>
+            </div>
+          </div>
+
+          <div class="mt5-positions-list" id="mt5-positions-container">
+            <div class="empty-state-card">
+              <div class="empty-icon">📈</div>
+              <div class="empty-text">Tidak ada posisi terbuka saat ini.</div>
+              <div class="empty-subtext">Bot sedang memantau pasar. Saat konfluensi 3-faktor tercapai, order otomatis akan terbuka dan muncul di sini.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 4: HISTORY (Closed Deals & Historical P&L)
+         ======================================================================= -->
+    <section id="view-history" class="app-view">
+      <div class="history-view-container">
+        
+        <!-- Metrics Strip -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title">Total Realized P&L</div>
+            <div class="metric-value" id="hist-total-pnl">$0.00</div>
+            <div class="metric-sub">Akumulasi transaksi ditutup</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Total Transaksi</div>
+            <div class="metric-value" id="hist-total-deals">0 Deals</div>
+            <div class="metric-sub" id="hist-winloss-ratio">0 Menang / 0 Kalah</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Win Rate</div>
+            <div class="metric-value positive" id="hist-winrate">0%</div>
+            <div class="metric-sub">Berdasarkan riwayat MT5</div>
+          </div>
+
+          <div class="metric-card btn-card">
+            <button type="button" class="btn-subtle-sm full-btn" id="btn-refresh-history">🔄 Muat Ulang Riwayat</button>
+          </div>
+        </div>
+
+        <!-- Deals Table -->
+        <div class="luxury-card">
+          <div class="card-head-row">
+            <div class="card-title">📜 Riwayat Transaksi MT5 (Closed Deals)</div>
+            <span class="badge-tag">Closed Deals</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="luxury-table">
+              <thead>
+                <tr>
+                  <th>Deal Ticket</th>
+                  <th>Pair / Simbol</th>
+                  <th>Tipe</th>
+                  <th>Volume (Lot)</th>
+                  <th>Harga Eksekusi</th>
+                  <th>Profit / Loss</th>
+                  <th>Waktu Penutupan</th>
+                </tr>
+              </thead>
+              <tbody id="page-history-tbody">
+                <tr>
+                  <td colspan="7" class="empty-cell">Memuat riwayat transaksi dari MetaTrader 5...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 5: SETTINGS (Configuration, Risk, AI Tuners, MT5 Switcher)
+         ======================================================================= -->
+    <section id="view-settings" class="app-view">
+      <div class="settings-view-container">
+        
+        <!-- Summary Cards Strip -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title">Mode Eksekusi</div>
+            <div class="metric-value" id="settings-summary-mode">DEMO</div>
+            <div class="metric-sub" id="settings-summary-tf">Timeframe: M15</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Aset Aktif</div>
+            <div class="metric-value" id="settings-summary-symbols">3 Pairs</div>
+            <div class="metric-sub">EURUSD, GBPUSD, XAUUSD</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Aturan Risiko</div>
+            <div class="metric-value positive" id="settings-summary-lot">0.01 Lot</div>
+            <div class="metric-sub" id="settings-summary-dd">Max DD: 3.0%</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Konfluensi AI</div>
+            <div class="metric-value highlight" id="settings-summary-score">3 / 3 Factors</div>
+            <div class="metric-sub">EMA50 + SMC + Structure</div>
+          </div>
+        </div>
+
+        <form id="form-page-settings" class="settings-form-layout">
+          <div class="settings-cards-grid">
+            
+            <!-- Card 1: Akun & Mode Eksekusi -->
+            <div class="luxury-card">
+              <div class="card-head-row">
+                <div class="card-title">💼 Akun & Mode Eksekusi</div>
+                <span class="badge-tag" id="settings-active-account-mode-tag">Demo Mode</span>
               </div>
 
-              <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px;">
+              <div class="account-active-banner">
                 <div>
+                  <div class="banner-lbl">Akun MT5 Terhubung Saat Ini</div>
+                  <div class="banner-val" id="settings-active-account-badge">Login: #-- | Server: --</div>
+                </div>
+                <div class="badge-status-pill" id="settings-active-status-indicator">DEMO SIMULASI</div>
+              </div>
+
+              <!-- MT5 Account Switcher Box -->
+              <div class="account-connect-box">
+                <div class="box-head">
+                  <span class="box-title">🔑 Hubungkan Akun MT5 (Real / Demo Broker)</span>
+                  <span class="box-badge">Instant Auto-Switch</span>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-field">
+                    <label for="cfg-mt5-account">Nomor Akun MT5 (Login ID)</label>
+                    <input type="number" id="cfg-mt5-account" placeholder="Contoh: 114546076 / Akun Real">
+                  </div>
+                  <div class="form-field">
+                    <label for="cfg-mt5-password">Password MT5</label>
+                    <input type="password" id="cfg-mt5-password" placeholder="Password MT5 Anda">
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label for="cfg-mt5-server">Server Broker MT5</label>
+                  <input type="text" id="cfg-mt5-server" list="mt5-server-list" placeholder="Ketik atau pilih server (misal Valetax-Live, Exness-Real, MetaQuotes-Demo)">
+                  <datalist id="mt5-server-list">
+                    <option value="MetaQuotes-Demo">
+                    <option value="Valetax-Live">
+                    <option value="Valetax-Demo">
+                    <option value="Exness-Real">
+                    <option value="Exness-Real2">
+                    <option value="Exness-Real3">
+                    <option value="XMGlobal-Real">
+                    <option value="XMGlobal-Real2">
+                    <option value="MIFX-Live">
+                    <option value="ICMarketsSC-Live">
+                    <option value="OctaFX-Real">
+                  </datalist>
+                </div>
+
+                <button type="button" class="btn-hero-orange full-btn" id="btn-switch-mt5-account">
+                  🔗 Hubungkan & Terapkan Akun MT5 Ini
+                </button>
+              </div>
+
+              <!-- Currency & FX Rate Controls -->
+              <div class="form-row-2" style="margin-top: 16px;">
+                <div class="form-field">
                   <label for="cfg-display-currency">Mata Uang Tampilan</label>
                   <select id="cfg-display-currency">
                     <option value="IDR" selected>🇮🇩 IDR — Rupiah (Rp)</option>
                     <option value="USD">🇺🇸 USD — Dollar ($)</option>
                   </select>
                 </div>
-                <div>
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <label for="cfg-idr-rate" style="margin-bottom: 0;">Kurs (1 USD ke IDR)</label>
-                    <span id="rate-live-badge" class="badge-tag" style="background: rgba(16, 185, 129, 0.18); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.68rem; padding: 2px 6px;">
-                      🟢 Live Pasar
-                    </span>
+
+                <div class="form-field">
+                  <div class="field-label-split">
+                    <label for="cfg-idr-rate">Kurs (1 USD ke IDR)</label>
+                    <span id="rate-live-badge" class="badge-tag">🟢 Live Pasar</span>
                   </div>
-                  <div style="display: flex; gap: 6px;">
-                    <input type="number" id="cfg-idr-rate" value="18090" min="1000" max="100000" style="font-family: var(--font-mono); font-weight: 600;">
-                    <button type="button" id="btn-sync-live-rate" class="btn btn-outline" title="Ambil Kurs Pasar Real-Time Terbaru dari Pasar Global" style="padding: 0 10px; font-size: 0.8rem; white-space: nowrap;">
-                      🔄 Sync
-                    </button>
+                  <div class="input-with-button">
+                    <input type="number" id="cfg-idr-rate" value="18090" min="1000" max="100000">
+                    <button type="button" id="btn-sync-live-rate" class="btn-subtle-sm">🔄 Sync</button>
                   </div>
-                  <span style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; display: block;">
-                    ⚡ <i>Kurs otomatis ter-update mengikuti data pasar global & bank.</i>
-                  </span>
+                </div>
+              </div>
+
+              <!-- Live Synced Indicator -->
+              <div class="sync-info-box">
+                <div class="sync-info-head">
+                  <span>⚡ Pair & Timeframe Bot (Tersinkron Otomatis)</span>
+                  <span class="badge-tag positive">Live Synced</span>
+                </div>
+                <div class="sync-info-body">
+                  Pair Aktif: <b id="settings-sync-pairs">EURUSD</b> | Timeframe: <b id="settings-sync-tf">M15</b>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Card 2: Manajemen Risiko & Pyramiding (Layering) -->
-          <div class="glass-panel" style="padding: 22px;">
-            <div class="section-header">
-              <div class="section-title">🛡️ Manajemen Risiko & Layering</div>
-              <span class="badge-tag">Safety Rules</span>
-            </div>
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 0;">
-              <div class="form-group">
-                <label for="cfg-page-fixed-lot">Fixed Lot Size (Lot Awal)</label>
-                <input type="number" step="0.01" id="cfg-page-fixed-lot" value="0.01">
+            <!-- Card 2: Manajemen Risiko & Layering -->
+            <div class="luxury-card">
+              <div class="card-head-row">
+                <div class="card-title">🛡️ Manajemen Risiko & Layering</div>
+                <span class="badge-tag">Safety Rules</span>
               </div>
 
-              <div class="form-group">
-                <label for="cfg-page-risk-pct">Risk % Per Trade</label>
-                <input type="number" step="0.1" id="cfg-page-risk-pct" value="1.0">
+              <div class="form-row-2">
+                <div class="form-field">
+                  <label for="cfg-page-fixed-lot">Fixed Lot Size (Lot Awal)</label>
+                  <input type="number" step="0.01" id="cfg-page-fixed-lot" value="0.01">
+                </div>
+                <div class="form-field">
+                  <label for="cfg-page-risk-pct">Risk % Per Trade</label>
+                  <input type="number" step="0.1" id="cfg-page-risk-pct" value="1.0">
+                </div>
               </div>
 
-              <div class="form-group">
-                <label for="cfg-page-max-dd">Daily Drawdown Limit (%) [0 = Bebas/Nonaktif]</label>
-                <input type="number" step="0.5" id="cfg-page-max-dd" value="3.0" min="0" max="50">
+              <div class="form-row-2">
+                <div class="form-field">
+                  <label for="cfg-page-max-dd">Daily Drawdown Limit (%) [0 = Off]</label>
+                  <input type="number" step="0.5" id="cfg-page-max-dd" value="3.0" min="0" max="50">
+                </div>
+                <div class="form-field">
+                  <label for="cfg-page-max-pos">Total Max Open Positions</label>
+                  <input type="number" id="cfg-page-max-pos" value="6" min="1" max="20">
+                </div>
               </div>
 
-              <div class="form-group">
-                <label for="cfg-page-max-pos">Total Max Open Positions</label>
-                <input type="number" id="cfg-page-max-pos" value="6" min="1" max="20">
-              </div>
-
-              <div class="form-group full-width">
-                <button type="button" class="btn btn-outline" id="btn-reset-drawdown-settings" style="width: 100%; justify-content: center; border-color: rgba(6, 182, 212, 0.4); color: var(--accent-cyan);">
+              <div class="form-field">
+                <button type="button" class="btn-subtle-sm full-btn" id="btn-reset-drawdown-settings">
                   🔄 Reset Proteksi Harian Sekarang (Buka Kunci Bot)
                 </button>
               </div>
 
-              <div class="form-group full-width">
+              <div class="form-field">
                 <label for="cfg-page-max-layers">Batas Maksimal Layer Per Aset (1 - 5 Layer)</label>
                 <input type="number" id="cfg-page-max-layers" value="3" min="1" max="5">
-                <span style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">
-                  Mengatur batas tumpukan posisi (layering) jika tren mendukung dengan jarak aman ATR.
-                </span>
               </div>
             </div>
-          </div>
 
-          <!-- Card 3: Konfluensi & Strategy Tuner -->
-          <div class="glass-panel" style="padding: 22px;">
-            <div class="section-header">
-              <div class="section-title">⚡ Confluence & Strategy Tuner</div>
-              <span class="badge-tag">AI Logic</span>
-            </div>
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 0;">
-              <div class="form-group full-width">
+            <!-- Card 3: Konfluensi & Strategy Tuner -->
+            <div class="luxury-card">
+              <div class="card-head-row">
+                <div class="card-title">⚡ Confluence & Strategy Tuner</div>
+                <span class="badge-tag">AI Logic</span>
+              </div>
+
+              <div class="form-field">
                 <label for="cfg-page-min-confluence">Syarat Minimum Konfluensi Trigger</label>
                 <select id="cfg-page-min-confluence">
-                  <option value="2">2 / 3 (Aggressive / Cepat Masuk — Cocok Coba-Coba & Sering Buka Posisi)</option>
-                  <option value="3" selected>3 / 3 (Strict Institutional — Standar Rekomendasi Disiplin Tinggi)</option>
+                  <option value="2">2 / 3 (Aggressive / Cepat Masuk — Cocok Coba-Coba)</option>
+                  <option value="3" selected>3 / 3 (Strict Institutional — Standar Rekomendasi)</option>
                 </select>
               </div>
 
-              <div class="form-group">
-                <label for="cfg-page-ema-period">EMA Trend Period</label>
-                <input type="number" id="cfg-page-ema-period" value="50" min="5" max="500">
+              <div class="form-row-2">
+                <div class="form-field">
+                  <label for="cfg-page-ema-period">EMA Trend Period</label>
+                  <input type="number" id="cfg-page-ema-period" value="50" min="5" max="500">
+                </div>
+                <div class="form-field">
+                  <label for="cfg-page-vol-multiplier">Volume Spike Multiplier</label>
+                  <input type="number" step="0.1" id="cfg-page-vol-multiplier" value="1.8" min="1.1" max="5.0">
+                </div>
               </div>
 
-              <div class="form-group">
-                <label for="cfg-page-vol-multiplier">Volume Spike Multiplier</label>
-                <input type="number" step="0.1" id="cfg-page-vol-multiplier" value="1.8" min="1.1" max="5.0">
-              </div>
-
-              <div class="form-group full-width">
+              <div class="form-field">
                 <label for="cfg-page-swing-lookback">Swing Lookback Bars (Struktur Pasar)</label>
                 <input type="number" id="cfg-page-swing-lookback" value="10" min="3" max="50">
               </div>
             </div>
-          </div>
 
-          <!-- Card 4: Diagnostik & Lisensi Sistem -->
-          <div class="glass-panel" style="padding: 22px;">
-            <div class="section-header">
-              <div class="section-title">🛠️ Alat Diagnostik & Lisensi SaaS</div>
-              <span class="badge-tag">Diagnostics</span>
-            </div>
-            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 16px;">
-              Akses cepat pengujian simulasi historis dan verifikasi keamanan perangkat lunak.
-            </p>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button type="button" class="btn btn-outline" id="btn-settings-open-backtest" style="flex: 1; min-width: 140px; justify-content: center;">
-                  📊 Jalankan Backtest
-                </button>
-                <button type="button" class="btn btn-outline" id="btn-settings-open-license" style="flex: 1; min-width: 140px; justify-content: center;">
-                  🔑 Cek Lisensi SaaS
-                </button>
+            <!-- Card 4: Diagnostik & Lisensi Sistem -->
+            <div class="luxury-card">
+              <div class="card-head-row">
+                <div class="card-title">🛠️ Alat Diagnostik & Lisensi SaaS</div>
+                <span class="badge-tag">Diagnostics</span>
               </div>
-              <div style="background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">
-                Hardware ID: <span id="settings-hw-fingerprint" style="color: var(--accent-cyan);">abc5a44a...</span>
+
+              <div class="form-row-2">
+                <button type="button" class="btn-subtle-sm" id="btn-settings-open-backtest">📊 Jalankan Backtest</button>
+                <button type="button" class="btn-subtle-sm" id="btn-settings-open-license">🔑 Cek Lisensi SaaS</button>
+              </div>
+
+              <div class="hardware-id-box">
+                Hardware ID: <span id="settings-hw-fingerprint">abc5a44a...</span>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Unified Save Action Bar -->
-        <div class="glass-panel" style="padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
-          <div>
-            <div style="font-size: 0.92rem; font-weight: 700; color: #fff;">💾 Simpan Konfigurasi Bot</div>
-            <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 2px;">
-              Perubahan parameter akan langsung diterapkan ke memori bot tanpa perlu restart aplikasi.
-            </div>
           </div>
-          <button type="submit" class="btn btn-primary" style="padding: 10px 28px; font-size: 0.92rem;">
-            💾 Simpan Semua Perubahan
-          </button>
-        </div>
-      </form>
+
+          <!-- Save Button Bar -->
+          <div class="save-bar-card">
+            <div>
+              <div class="save-title">💾 Simpan Konfigurasi Bot</div>
+              <div class="save-sub">Perubahan parameter langsung diterapkan tanpa restart aplikasi.</div>
+            </div>
+            <button type="submit" class="btn-hero-orange" id="btn-save-page-settings-top">
+              💾 Simpan Semua Perubahan
+            </button>
+          </div>
+        </form>
+
+      </div>
     </section>
+
   </main>
 
   <!-- =========================================================================
-       FIXED BOTTOM NAVIGATION DOCK (NAVIGASI BAWAH: CHART, TRADE, HISTORY, SETTING)
+       FLOATING BOTTOM NAVIGATION DOCK (Exact Reference Bottom Dock with Center FAB ⇄)
        ========================================================================= -->
-  <nav class="bottom-nav">
-    <button class="bottom-nav-item active" id="nav-btn-chart" data-view="chart">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="20" x2="18" y2="10"></line>
-          <line x1="12" y1="20" x2="12" y2="4"></line>
-          <line x1="6" y1="20" x2="6" y2="14"></line>
-        </svg>
-      </div>
-      <span class="nav-label">Chart</span>
-    </button>
+  <nav class="bottom-dock-nav">
+    <div class="dock-container">
+      
+      <!-- 1. Home (Screen 2 Portfolio) -->
+      <button type="button" class="dock-item active" id="nav-btn-home" data-view="home">
+        <div class="dock-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </div>
+        <span class="dock-label">Home</span>
+      </button>
 
-    <button class="bottom-nav-item" id="nav-btn-trade" data-view="trade">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-          <polyline points="16 7 22 7 22 13"></polyline>
-        </svg>
-        <span class="nav-badge" id="nav-trade-badge" style="display: none;">0</span>
-      </div>
-      <span class="nav-label">Trade</span>
-    </button>
+      <!-- 2. Chart / Detail (Screen 3 Live Terminal) -->
+      <button type="button" class="dock-item" id="nav-btn-chart" data-view="chart">
+        <div class="dock-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        </div>
+        <span class="dock-label">Terminal</span>
+      </button>
 
-    <button class="bottom-nav-item" id="nav-btn-history" data-view="history">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
+      <!-- 3. CENTER FLOATING ACTION BUTTON ⇄ (Signature Orange Circle from Reference) -->
+      <div class="dock-center-fab-wrap">
+        <button type="button" class="dock-fab-btn" id="btn-dock-quick-fab" title="Quick Trade / Switch View">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+            <path d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+          </svg>
+        </button>
       </div>
-      <span class="nav-label">History</span>
-    </button>
 
-    <button class="bottom-nav-item" id="nav-btn-settings" data-view="settings">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-      </div>
-      <span class="nav-label">Setting</span>
-    </button>
+      <!-- 4. Positions / Wallet (MT5 Open Positions) -->
+      <button type="button" class="dock-item" id="nav-btn-trade" data-view="trade">
+        <div class="dock-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+          <span class="dock-badge" id="nav-trade-badge" style="display: none;">0</span>
+        </div>
+        <span class="dock-label">Trade</span>
+      </button>
+
+      <!-- 5. Settings / History -->
+      <button type="button" class="dock-item" id="nav-btn-settings" data-view="settings">
+        <div class="dock-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </div>
+        <span class="dock-label">Settings</span>
+      </button>
+
+      <!-- Hidden hook for History navigation -->
+      <button type="button" id="nav-btn-history" data-view="history" style="display: none;"></button>
+    </div>
   </nav>
 
-  <!-- Modals for Secondary Actions (Backtest & License) -->
-
+  <!-- =========================================================================
+       MODALS: Backtest & License
+       ========================================================================= -->
   <!-- Backtest Modal -->
   <div class="modal-overlay" id="modal-backtest">
-    <div class="modal-content" style="max-width: 650px;">
-      <div class="modal-header">
-        <h2>📊 Historical Backtest Runner</h2>
-        <button class="close-btn" id="btn-close-backtest">&times;</button>
+    <div class="modal-content">
+      <div class="modal-head">
+        <h3>📊 Historical Backtest Runner</h3>
+        <button type="button" class="btn-close-modal" id="btn-close-backtest">&times;</button>
       </div>
-      <div class="form-grid" style="margin-bottom: 14px;">
-        <div class="form-group">
+      <div class="form-row-2">
+        <div class="form-field">
           <label for="bt-symbol">Symbol</label>
           <select id="bt-symbol">
             <option value="EURUSD">EURUSD</option>
@@ -638,35 +921,32 @@
             <option value="XAUUSD">XAUUSD</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-field">
           <label for="bt-bars">Historical Candles</label>
           <input type="number" id="bt-bars" value="400" min="100" max="2000">
         </div>
       </div>
-      <button class="btn btn-primary" id="btn-run-backtest-action" style="width: 100%; margin-bottom: 18px; justify-content: center;">
-        Run Simulation
-      </button>
+      <button type="button" class="btn-hero-orange full-btn" id="btn-run-backtest-action">Run Simulation</button>
 
-      <!-- Backtest Results Display -->
-      <div id="backtest-results-area" style="display: none;">
-        <div class="metrics-strip" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 14px;">
-          <div class="metric-card glass-panel" style="padding: 12px;">
-            <div class="title">Win Rate</div>
-            <div class="value" id="bt-winrate" style="font-size: 1.25rem; color: var(--accent-green);">0%</div>
+      <div id="backtest-results-area" style="display: none; margin-top: 16px;">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title">Win Rate</div>
+            <div class="metric-value positive" id="bt-winrate">0%</div>
           </div>
-          <div class="metric-card glass-panel" style="padding: 12px;">
-            <div class="title">Net Profit</div>
-            <div class="value" id="bt-profit" style="font-size: 1.25rem;">$0.00</div>
+          <div class="metric-card">
+            <div class="metric-title">Net Profit</div>
+            <div class="metric-value" id="bt-profit">$0.00</div>
           </div>
-          <div class="metric-card glass-panel" style="padding: 12px;">
-            <div class="title">Profit Factor</div>
-            <div class="value" id="bt-pf" style="font-size: 1.25rem; color: var(--accent-cyan);">0.0</div>
+          <div class="metric-card">
+            <div class="metric-title">Profit Factor</div>
+            <div class="metric-value highlight" id="bt-pf">0.0</div>
           </div>
         </div>
-        <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.8; background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-          <div>Total Trades: <b id="bt-total-trades" style="color: #fff;">0</b> (<span id="bt-trades-winloss">0W / 0L</span>)</div>
+        <div class="backtest-stats-box">
+          <div>Total Trades: <b id="bt-total-trades">0</b> (<span id="bt-trades-winloss">0W / 0L</span>)</div>
           <div>Max Drawdown: <b id="bt-drawdown" style="color: var(--accent-red);">$0.00 (0%)</b></div>
-          <div>Expectancy: <b id="bt-expectancy" style="color: #fff;">$0.00 / trade</b></div>
+          <div>Expectancy: <b id="bt-expectancy">$0.00 / trade</b></div>
         </div>
       </div>
     </div>
@@ -675,28 +955,27 @@
   <!-- License Modal -->
   <div class="modal-overlay" id="modal-license">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>🔑 SaaS License Manager</h2>
-        <button class="close-btn" id="btn-close-license">&times;</button>
+      <div class="modal-head">
+        <h3>🔑 SaaS License Manager</h3>
+        <button type="button" class="btn-close-modal" id="btn-close-license">&times;</button>
       </div>
-      <div class="form-group" style="margin-bottom: 16px;">
+      <div class="form-field">
         <label>Hardware Fingerprint (UUID):</label>
-        <input type="text" id="lic-hw-id" readonly style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-cyan);">
+        <input type="text" id="lic-hw-id" readonly>
       </div>
-      <div class="form-group" style="margin-bottom: 20px;">
+      <div class="form-field">
         <label for="lic-key-input">License Key:</label>
         <input type="text" id="lic-key-input" placeholder="e.g. NEXUS-PRO-XXXX">
       </div>
-      <div id="lic-status-badge" style="margin-bottom: 16px; font-size: 0.85rem; font-weight: 600;"></div>
-      <button class="btn btn-primary" id="btn-verify-license-action" style="width: 100%; justify-content: center;">
-        Verify License
-      </button>
+      <div id="lic-status-badge"></div>
+      <button type="button" class="btn-hero-orange full-btn" id="btn-verify-license-action">Verify License</button>
     </div>
   </div>
 
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <script src="/static/app.js?v=5.0"></script>
+  <!-- Main JavaScript Controller -->
+  <script src="/static/app.js?v=6.0"></script>
 </body>
 </html>

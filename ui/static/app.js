@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
         currToggleText.textContent = "USD ($)";
       }
     }
+    if (heroCurrencyLabel) {
+      heroCurrencyLabel.textContent = displayCurrency === "IDR" ? "Mata Uang: IDR (Rp)" : "Mata Uang: USD ($)";
+    }
     if (cfgDisplayCurrency) cfgDisplayCurrency.value = displayCurrency;
     if (cfgIdrRate) cfgIdrRate.value = idrExchangeRate;
   }
@@ -116,12 +119,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnTradeFlatAll = document.getElementById("btn-trade-flat-all");
   const btnRefreshPositions = document.getElementById("btn-refresh-positions");
 
-  // Bottom Navigation & Badge
+  // Bottom Navigation & Dock
+  const navBtnHome = document.getElementById("nav-btn-home");
   const navBtnChart = document.getElementById("nav-btn-chart");
   const navBtnTrade = document.getElementById("nav-btn-trade");
   const navBtnHistory = document.getElementById("nav-btn-history");
   const navBtnSettings = document.getElementById("nav-btn-settings");
   const navTradeBadge = document.getElementById("nav-trade-badge");
+  const btnDockQuickFab = document.getElementById("btn-dock-quick-fab");
+
+  // Hero Portfolio Action Pills (Screen 2)
+  const btnHeroCurrencySwitch = document.getElementById("btn-hero-currency-switch");
+  const heroCurrencyLabel = document.getElementById("hero-currency-label");
+  const btnHeroBotAction = document.getElementById("btn-hero-bot-action");
+  const heroBotLabel = document.getElementById("hero-bot-label");
+  const valPnlPct = document.getElementById("val-pnl-pct");
+  const headerUserAccount = document.getElementById("header-user-account");
+
+  // Screen 1 Welcome Modal
+  const welcomeModal = document.getElementById("welcome-modal");
+  const btnWelcomeStart = document.getElementById("btn-welcome-start");
+  const btnWelcomeLogin = document.getElementById("btn-welcome-login");
+  const btnOpenProfileCard = document.getElementById("btn-open-profile-card");
+
+  // Screen 3 Detail & Chart Hero Elements
+  const chartActivePairName = document.getElementById("chart-active-pair-name");
+  const chartHeroPrice = document.getElementById("chart-hero-price");
+  const chartHeroChange = document.getElementById("chart-hero-change");
 
   // History View Elements
   const histTotalPnl = document.getElementById("hist-total-pnl");
@@ -145,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalLicense = document.getElementById("modal-license");
 
   // Chart State
-  let currentActiveView = "chart";
+  let currentActiveView = localStorage.getItem("nexus_active_view") || "home";
   let selectedSymbol = localStorage.getItem("nexus_selected_symbol") || "EURUSD";
   let selectedTimeframe = localStorage.getItem("nexus_selected_tf") || "M15";
   let chart = null;
@@ -211,10 +235,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // SPA VIEW SWITCHER (CHART, TRADE, HISTORY, SETTING)
+  // SPA VIEW SWITCHER (HOME, CHART, TRADE, HISTORY, SETTINGS)
   // =========================================================================
   function switchView(viewName) {
     currentActiveView = viewName;
+    localStorage.setItem("nexus_active_view", viewName);
 
     // Toggle views
     document.querySelectorAll(".app-view").forEach((v) => {
@@ -228,13 +253,17 @@ document.addEventListener("DOMContentLoaded", () => {
       targetView.classList.add("active");
     }
 
-    // Toggle bottom nav items
-    document.querySelectorAll(".bottom-nav-item").forEach((b) => b.classList.remove("active"));
+    // Toggle bottom dock items
+    document.querySelectorAll(".dock-item, .bottom-nav-item").forEach((b) => b.classList.remove("active"));
     const activeNavBtn = document.getElementById(`nav-btn-${viewName}`);
     if (activeNavBtn) activeNavBtn.classList.add("active");
 
     // Action per view switch
-    if (viewName === "chart") {
+    if (viewName === "home") {
+      fetchStatus();
+      fetchSignals();
+      fetchLiveTick();
+    } else if (viewName === "chart") {
       if (chart && chartContainer) {
         setTimeout(() => {
           const w = chartContainer.clientWidth || 1100;
@@ -244,6 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 80);
       }
       fetchChartData();
+      fetchLiveTick();
     } else if (viewName === "trade") {
       fetchStatus();
       fetchPositions();
@@ -252,28 +282,63 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (viewName === "settings") {
       loadSettingsIntoPageForm();
     }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   // Nav Button Click Handlers
+  if (navBtnHome) navBtnHome.addEventListener("click", () => switchView("home"));
   if (navBtnChart) navBtnChart.addEventListener("click", () => switchView("chart"));
   if (navBtnTrade) navBtnTrade.addEventListener("click", () => switchView("trade"));
   if (navBtnHistory) navBtnHistory.addEventListener("click", () => switchView("history"));
   if (navBtnSettings) navBtnSettings.addEventListener("click", () => switchView("settings"));
 
+  // Signature Center Floating Action Button (⇄)
+  if (btnDockQuickFab) {
+    btnDockQuickFab.addEventListener("click", () => {
+      if (currentActiveView === "home") {
+        switchView("chart");
+      } else {
+        switchView("home");
+      }
+    });
+  }
+
   // Currency Switcher Toggle Handler
-  if (btnCurrencyToggle) {
-    btnCurrencyToggle.addEventListener("click", () => {
-      displayCurrency = displayCurrency === "IDR" ? "USD" : "IDR";
-      localStorage.setItem("nexus_display_currency", displayCurrency);
-      updateCurrencyButton();
-      const msg =
-        displayCurrency === "IDR"
-          ? `Mata uang tampilan diubah ke Rupiah (Kurs: 1 USD = Rp ${idrExchangeRate.toLocaleString("id-ID")})`
-          : "Mata uang tampilan diubah ke US Dollar ($)";
-      showToast(msg, "info");
-      fetchStatus();
-      fetchPositions();
-      fetchHistoryPage();
+  function toggleCurrency() {
+    displayCurrency = displayCurrency === "IDR" ? "USD" : "IDR";
+    localStorage.setItem("nexus_display_currency", displayCurrency);
+    updateCurrencyButton();
+    const msg =
+      displayCurrency === "IDR"
+        ? `Mata uang tampilan diubah ke Rupiah (Kurs: 1 USD = Rp ${idrExchangeRate.toLocaleString("id-ID")})`
+        : "Mata uang tampilan diubah ke US Dollar ($)";
+    showToast(msg, "info");
+    fetchStatus();
+    fetchPositions();
+    fetchHistoryPage();
+  }
+
+  if (btnCurrencyToggle) btnCurrencyToggle.addEventListener("click", toggleCurrency);
+  if (btnHeroCurrencySwitch) btnHeroCurrencySwitch.addEventListener("click", toggleCurrency);
+
+  // Screen 1 Welcome Modal Handlers
+  if (btnWelcomeStart) {
+    btnWelcomeStart.addEventListener("click", () => {
+      if (welcomeModal) welcomeModal.classList.remove("active");
+      localStorage.setItem("nexus_has_seen_intro", "true");
+    });
+  }
+  if (btnWelcomeLogin) {
+    btnWelcomeLogin.addEventListener("click", () => {
+      if (welcomeModal) welcomeModal.classList.remove("active");
+      localStorage.setItem("nexus_has_seen_intro", "true");
+      switchView("settings");
+    });
+  }
+  if (btnOpenProfileCard) {
+    btnOpenProfileCard.addEventListener("click", () => {
+      if (welcomeModal) welcomeModal.classList.add("active");
     });
   }
 
@@ -303,38 +368,38 @@ document.addEventListener("DOMContentLoaded", () => {
       height: containerHeight,
       layout: {
         background: { color: "transparent" },
-        textColor: "#94a3b8",
+        textColor: "#7a7f8f",
         fontFamily: "'JetBrains Mono', -apple-system, sans-serif",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: "rgba(255, 255, 255, 0.03)" },
-        horzLines: { color: "rgba(255, 255, 255, 0.03)" },
+        vertLines: { color: "rgba(255, 255, 255, 0.025)" },
+        horzLines: { color: "rgba(255, 255, 255, 0.025)" },
       },
       crosshair: {
         mode: 1,
         vertLine: {
-          color: "rgba(6, 182, 212, 0.4)",
+          color: "rgba(255, 85, 0, 0.4)",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#0f172a",
+          labelBackgroundColor: "#14151b",
         },
         horzLine: {
-          color: "rgba(6, 182, 212, 0.4)",
+          color: "rgba(255, 85, 0, 0.4)",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#0f172a",
+          labelBackgroundColor: "#14151b",
         },
       },
       rightPriceScale: {
-        borderColor: "rgba(255, 255, 255, 0.08)",
+        borderColor: "rgba(255, 255, 255, 0.06)",
         scaleMargins: {
           top: 0.1,
           bottom: 0.22,
         },
       },
       timeScale: {
-        borderColor: "rgba(255, 255, 255, 0.08)",
+        borderColor: "rgba(255, 255, 255, 0.06)",
         timeVisible: true,
         secondsVisible: false,
       },
@@ -342,14 +407,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const initialFmt = getSymbolPrecision(selectedSymbol);
 
-    // 1. Candlestick Series
+    // 1. Candlestick Series (Shakuro Emerald & Crimson)
     candlestickSeries = chart.addCandlestickSeries({
-      upColor: "#10b981",
-      downColor: "#f43f5e",
-      borderUpColor: "#10b981",
-      borderDownColor: "#f43f5e",
-      wickUpColor: "#10b981",
-      wickDownColor: "#f43f5e",
+      upColor: "#22c55e",
+      downColor: "#ef4444",
+      borderUpColor: "#22c55e",
+      borderDownColor: "#ef4444",
+      wickUpColor: "#22c55e",
+      wickDownColor: "#ef4444",
       priceFormat: {
         type: "price",
         precision: initialFmt.precision,
@@ -671,21 +736,33 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!tick) return;
     const currentSym = selectedSymbol || "EURUSD";
     if (qtActiveSymbolLabel) qtActiveSymbolLabel.textContent = currentSym;
+    if (chartActivePairName) chartActivePairName.textContent = currentSym;
 
-    if (tick.bid !== undefined && qtBidPrice) {
-      qtBidPrice.textContent = formatPrice(tick.bid, currentSym);
+    const formattedBid = formatPrice(tick.bid, currentSym);
+    const formattedAsk = formatPrice(tick.ask, currentSym);
+
+    if (tick.bid !== undefined) {
+      if (qtBidPrice) qtBidPrice.textContent = formattedBid;
+      if (chartHeroPrice) chartHeroPrice.textContent = formattedBid;
+
+      const elFund = document.getElementById(`fund-price-${currentSym.toLowerCase()}`);
+      if (elFund) elFund.textContent = formattedBid;
+      const elWl = document.getElementById(`wl-price-${currentSym.toLowerCase()}`);
+      if (elWl) elWl.textContent = formattedBid;
     }
     if (tick.ask !== undefined && qtAskPrice) {
-      qtAskPrice.textContent = formatPrice(tick.ask, currentSym);
+      qtAskPrice.textContent = formattedAsk;
     }
     if (qtSpreadVal && (tick.spread !== undefined || tick.spread_points !== undefined)) {
       const sp = tick.spread !== undefined ? tick.spread : tick.spread_points;
       qtSpreadVal.textContent = `${sp} pts`;
+      if (chartHeroChange) {
+        chartHeroChange.innerHTML = `<span class="change-delta">Spread: ${sp} pts</span> <span class="change-pct positive">LIVE TICK</span>`;
+      }
     }
   }
 
   async function fetchLiveTick() {
-    if (currentActiveView !== "chart") return;
     try {
       const res = await fetch(`/api/trading/tick?symbol=${selectedSymbol}`);
       const data = await res.json();
@@ -748,8 +825,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
 
       botIsRunning = data.bot_running;
-      btnToggleBot.textContent = botIsRunning ? "⏸ Pause Bot" : "▶ Start Bot";
-      btnToggleBot.className = botIsRunning ? "btn btn-danger" : "btn btn-primary";
+      btnToggleBot.innerHTML = botIsRunning ? '<span class="bot-status-icon">⏸</span> <span class="bot-btn-label">Pause Bot</span>' : '<span class="bot-status-icon">▶</span> <span class="bot-btn-label">Start Bot</span>';
+      btnToggleBot.className = botIsRunning ? "pill-btn-action paused" : "pill-btn-action";
+
+      if (heroBotLabel) {
+        heroBotLabel.textContent = botIsRunning ? "Pause Bot Engine" : "Start Bot Engine";
+      }
+      if (btnHeroBotAction) {
+        btnHeroBotAction.style.borderColor = botIsRunning ? "rgba(239, 68, 68, 0.5)" : "var(--border-hairline)";
+      }
 
       if (data.mt5_connected) {
         mt5StatusDot.className = "pulse-dot";
@@ -762,6 +846,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         valServer.textContent = `Server: ${data.account?.server || "Connected"}`;
 
+        if (headerUserAccount) {
+          headerUserAccount.textContent = `MT5 #${data.account?.login || "Live"} • ${data.account?.server || "Server"}`;
+        }
+
         const bal = data.account.balance || 0;
         const eq = data.account.equity || 0;
         const profit = data.account.profit || 0;
@@ -769,11 +857,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const freeMargin = data.account.margin_free || 0;
         const marginLevel = data.account.margin_level || 0;
 
-        // Chart View Telemetry Strip
+        // Chart & Hero Telemetry
         valBalance.textContent = formatMoney(bal);
         valEquity.textContent = formatMoney(eq);
         valFloatingProfit.textContent = `Floating: ${formatMoney(profit, { withSign: true })}`;
         valFloatingProfit.style.color = profit >= 0 ? "var(--accent-green)" : "var(--accent-red)";
+
+        if (valPnlPct && bal > 0) {
+          const pct = ((profit / bal) * 100).toFixed(2);
+          const sign = profit >= 0 ? "+" : "";
+          valPnlPct.textContent = `${sign}${pct}%`;
+          valPnlPct.className = profit >= 0 ? "pnl-percent" : "pnl-percent negative";
+          valPnlPct.style.color = profit >= 0 ? "var(--accent-green)" : "var(--accent-red)";
+          valPnlPct.style.background = profit >= 0 ? "var(--accent-green-bg)" : "var(--accent-red-bg)";
+        }
+
         valFreeMargin.textContent = formatMoney(freeMargin);
         valMarginLevel.textContent = `Margin Level: ${marginLevel.toFixed(1)}%`;
         const isReal = (data.account.trade_mode === "REAL");
@@ -1379,13 +1477,89 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================================================================
   // BOT CONTROLS (START / PAUSE)
   // =========================================================================
-  btnToggleBot.addEventListener("click", async () => {
+  async function toggleBot() {
     const endpoint = botIsRunning ? "/api/bot/stop" : "/api/bot/start";
     const res = await fetch(endpoint, { method: "POST" });
     const data = await res.json();
     showToast(data.message, "info");
     fetchStatus();
-  });
+  }
+
+  if (btnToggleBot) btnToggleBot.addEventListener("click", toggleBot);
+  if (btnHeroBotAction) btnHeroBotAction.addEventListener("click", toggleBot);
+
+  // =========================================================================
+  // FUNDS CAROUSEL & WATCHLIST ROW INTERACTIONS (SHAKURO STYLE)
+  // =========================================================================
+  function setupSymbolCardInteractions() {
+    document.querySelectorAll(".fund-card[data-symbol], .watchlist-row[data-symbol]").forEach((el) => {
+      el.addEventListener("click", async () => {
+        const sym = el.dataset.symbol;
+        if (!sym) return;
+
+        selectedSymbol = sym;
+        localStorage.setItem("nexus_selected_symbol", selectedSymbol);
+
+        // Highlight active card in carousel
+        document.querySelectorAll(".fund-card").forEach((c) => {
+          if (c.dataset.symbol === sym) c.classList.add("active");
+          else c.classList.remove("active");
+        });
+
+        // Highlight active symbol button in chart bar
+        document.querySelectorAll(".symbol-btn").forEach((b) => {
+          if (b.dataset.symbol === sym) b.classList.add("active");
+          else b.classList.remove("active");
+        });
+
+        if (chartActivePairName) chartActivePairName.textContent = sym;
+
+        showToast(`Aset aktif disinkronkan ke: ${sym}`, "info");
+        await quickSyncTrading({ symbols: [sym] });
+        fetchLiveTick();
+        fetchChartData();
+        if (chart) chart.timeScale().fitContent();
+
+        // If clicked on mobile, smoothly switch to chart execution view
+        if (window.innerWidth <= 768) {
+          switchView("chart");
+        }
+      });
+    });
+
+    const btnAddSymbol = document.getElementById("btn-add-symbol");
+    if (btnAddSymbol) {
+      btnAddSymbol.addEventListener("click", async () => {
+        document.querySelectorAll(".symbol-btn").forEach((b) => {
+          if (b.dataset.symbol === "ALL") b.classList.add("active");
+          else b.classList.remove("active");
+        });
+        showToast("Bot disinkronkan: Memantau SEMUA 3 Pair!", "success");
+        await quickSyncTrading({ symbols: ["EURUSD", "GBPUSD", "XAUUSD"] });
+        fetchLiveTick();
+        fetchChartData();
+      });
+    }
+
+    const btnFundsViewAll = document.getElementById("btn-funds-view-all");
+    if (btnFundsViewAll) {
+      btnFundsViewAll.addEventListener("click", () => switchView("chart"));
+    }
+
+    // Category Tabs (Most Popular, Biggest Movers, AI Confluence)
+    document.querySelectorAll(".cat-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".cat-tab").forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        const t = tab.dataset.tab;
+        if (t === "radar") {
+          const radarEl = document.querySelector(".radar-section");
+          if (radarEl) radarEl.scrollIntoView({ behavior: "smooth" });
+        }
+      });
+    });
+  }
 
   // =========================================================================
   // MODALS (BACKTEST & LICENSE)
@@ -1471,6 +1645,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   updateCurrencyButton();
+  setupSymbolCardInteractions();
+
   document.querySelectorAll(".symbol-btn").forEach((b) => {
     b.classList.remove("active");
     if (b.dataset.symbol === selectedSymbol) b.classList.add("active");
@@ -1479,6 +1655,7 @@ document.addEventListener("DOMContentLoaded", () => {
     b.classList.remove("active");
     if (b.dataset.tf === selectedTimeframe) b.classList.add("active");
   });
+
   startChartWithRetry();
   fetchStatus();
   fetchPositions();
@@ -1487,10 +1664,13 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSettingsIntoPageForm();
   fetchLiveUsdIdrRate(false);
 
+  // Switch to initial view
+  switchView(currentActiveView);
+
   // Periodic polling intervals
   setInterval(fetchStatus, 2500);
   setInterval(fetchPositions, 2000); // 2-second fast responsive polling for live positions
-  setInterval(fetchLiveTick, 1500);  // 1.5-second live tick updater for Quick Trade Bar
+  setInterval(fetchLiveTick, 1500);  // 1.5-second live tick updater
   setInterval(fetchSignals, 5000);
   setInterval(() => fetchLiveUsdIdrRate(false), 600000); // 10-minute auto refresh live FX rate
   setInterval(() => {
