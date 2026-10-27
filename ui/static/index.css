@@ -360,7 +360,7 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 140px;
+  max-width: clamp(140px, 40vw, 360px);
 }
 
 .header-right {
@@ -1060,7 +1060,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding-bottom: 90px; /* Space so fixed dock doesn't cover anything */
+  padding-bottom: 24px;
 }
 
 .screen3-header {
@@ -1139,6 +1139,16 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Top Toolbar: Symbol Selector & Timeframe Pills side by side */
+.chart-top-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
 }
 
 /* Symbol Selector Pills */
@@ -1292,29 +1302,23 @@ button {
 }
 
 /* ===================================================================
-   FIXED STICKY QUICK TRADE EXECUTION BAR (Screen 3 Bottom Controls)
-   Pinned at the bottom of the viewport so traders can ALWAYS execute!
+   TOP QUICK TRADE EXECUTION BAR (Placed neatly above chart)
    =================================================================== */
+.top-trade-execution-card,
 .screen3-trade-dock {
-  position: fixed;
-  bottom: 74px; /* Sits directly above bottom nav dock */
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 32px);
-  max-width: 620px;
-  z-index: 998;
-  background: rgba(19, 20, 26, 0.96);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-pill);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
-  padding: 10px 16px;
+  position: relative;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card-sm);
+  box-shadow: var(--shadow-card);
+  padding: 12px 18px;
   display: grid;
   grid-template-columns: auto auto 1fr 1fr;
   align-items: center;
   gap: 12px;
-  margin: 0 auto;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .qt-lot-controller {
@@ -1939,6 +1943,8 @@ button {
 
 .form-field input,
 .form-field select {
+  width: 100%;
+  box-sizing: border-box;
   background: var(--bg-input);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-inner);
@@ -1947,6 +1953,15 @@ button {
   color: var(--text-white);
   outline: none;
   transition: var(--trans-fast);
+}
+
+.account-connect-box .form-field {
+  width: 100%;
+}
+
+.account-connect-box .form-field input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-field input:focus,
@@ -2310,17 +2325,19 @@ button {
     gap: 8px;
   }
 
-  /* Fixed Terminal Dock on Mobile */
+  /* Top Terminal Execution Card on Mobile */
+  .top-trade-execution-card,
   .screen3-trade-dock {
-    bottom: 64px;
-    left: 8px;
-    right: 8px;
-    width: auto;
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
     transform: none;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    padding: 8px 10px;
-    border-radius: 16px;
+    padding: 10px 12px;
+    border-radius: var(--radius-inner);
   }
 
   .qt-lot-controller {
@@ -2411,11 +2428,12 @@ button {
     display: inline-flex;
   }
 
+  .top-trade-execution-card,
   .screen3-trade-dock {
     grid-template-columns: auto auto 1fr 1fr;
     gap: 14px;
     padding: 12px 18px;
-    bottom: 72px;
+    bottom: auto;
   }
 }
 

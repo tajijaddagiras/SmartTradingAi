@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/static/index.css?v=7.5">
-  <script src="/static/libs/lightweight-charts.js?v=7.5"></script>
+  <link rel="stylesheet" href="/static/index.css?v=8.0">
+  <script src="/static/libs/lightweight-charts.js?v=8.0"></script>
 </head>
 <body class="shakuro-theme">
 
@@ -63,41 +63,9 @@
         </div>
       </div>
 
-      <!-- Action Strip: Compact on Mobile, Expanded on Desktop -->
+      <!-- Action Strip: Clean & Consistent on ALL Devices (Bell Only) -->
       <div class="header-right">
-        <!-- Currency Switcher Pill (IDR / USD) -->
-        <button type="button" class="pill-badge-btn" id="btn-currency-toggle" title="Ganti Tampilan Mata Uang (USD / IDR)">
-          <span class="curr-symbol-badge" id="curr-toggle-flag">IDR</span>
-          <span id="curr-toggle-text">Rp</span>
-        </button>
-
-        <!-- Bot Toggle Button (Pill style matching reference) -->
-        <button type="button" class="pill-btn-action" id="btn-toggle-bot">
-          <span class="bot-status-icon" id="bot-toggle-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-          </span>
-          <span class="bot-btn-label" id="bot-toggle-text">Start Bot</span>
-        </button>
-
-        <!-- Desktop-Only System Telemetry Micro-Pills -->
-        <div class="status-capsule desktop-only-capsule" id="mt5-status-pill" title="Status MetaTrader 5">
-          <span class="pulse-dot" id="mt5-status-dot"></span>
-          <span id="mt5-status-text">MT5: Connecting...</span>
-        </div>
-
-        <div class="status-capsule desktop-only-capsule" id="anti-sleep-pill" title="Anti-Sleep VPS Guard">
-          <span class="pulse-dot" id="anti-sleep-dot"></span>
-          <span id="anti-sleep-text">Anti-Sleep: Idle</span>
-        </div>
-
-        <div class="status-capsule desktop-only-capsule" id="circuit-breaker-pill" title="Proteksi Drawdown">
-          <span id="circuit-breaker-text">Drawdown: Safe</span>
-          <button id="btn-reset-dd-header" class="btn-mini-reset" title="Buka Kunci Bot" style="display: none;">Reset</button>
-        </div>
-
-        <!-- Notification Bell Pill (Matching Screen 2 & 3 Top Right) -->
+        <!-- Notification Bell Icon (Only element on the right across all devices) -->
         <button type="button" class="icon-round-btn" id="btn-header-bell" title="Notifikasi Sistem">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -105,9 +73,16 @@
           </svg>
         </button>
 
-        <!-- Hidden Helper for Sync -->
-        <span id="val-server" style="display: none;">Server: Disconnected</span>
-        <span id="val-timeframe" style="display: none;">Timeframe: M15</span>
+        <!-- Hidden background elements for JS telemetry polling & sync -->
+        <div style="display: none;" aria-hidden="true">
+          <button id="btn-currency-toggle"><span id="curr-toggle-flag"></span><span id="curr-toggle-text"></span></button>
+          <button id="btn-toggle-bot"><span id="bot-toggle-icon"></span><span id="bot-toggle-text"></span></button>
+          <div id="mt5-status-pill"><span id="mt5-status-dot"></span><span id="mt5-status-text"></span></div>
+          <div id="anti-sleep-pill"><span id="anti-sleep-dot"></span><span id="anti-sleep-text"></span></div>
+          <div id="circuit-breaker-pill"><span id="circuit-breaker-text"></span><button id="btn-reset-dd-header"></button></div>
+          <span id="val-server">Server: Disconnected</span>
+          <span id="val-timeframe">Timeframe: M15</span>
+        </div>
       </div>
     </div>
   </header>
@@ -355,65 +330,89 @@
     </section>
 
     <!-- =======================================================================
-         VIEW 2: CHART & LIVE EXECUTION (Exact Screen 3: Pinned Sticky Dock)
+         VIEW 2: CHART & LIVE EXECUTION (Terminal: Clean Top Controls)
          ======================================================================= -->
     <section id="view-chart" class="app-view">
       <div class="chart-screen-container">
         
         <!-- Screen 3 Header: Big Pair Ticker, Massive Price, and 24h Change Badge -->
         <div class="screen3-header">
-          <div class="ticker-left-wrap">
-            <button type="button" class="btn-chart-back" id="btn-chart-back-home" title="Kembali ke Dashboard">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="inline-svg-icon">
-                <polyline points="15 18 9 12 15 6"></polyline>
-              </svg>
-              <span>Home</span>
-            </button>
-            <div class="ticker-price-block">
-              <div class="active-ticker-label" id="chart-active-pair-name">EURUSD</div>
-              <div class="active-hero-price" id="chart-hero-price">1.08450</div>
-            </div>
+          <div class="ticker-price-block">
+            <div class="active-ticker-label" id="chart-active-pair-name">EURUSD</div>
+            <div class="active-hero-price" id="chart-hero-price">1.08450</div>
           </div>
           <div class="ticker-change-block">
             <div class="screen3-change-badge" id="chart-hero-change">
               <span class="change-delta">+0.00142</span>
               <span class="change-pct">+0.45%</span>
             </div>
-            <div class="screen3-actions">
-              <button type="button" class="icon-round-btn" id="btn-chart-bell" title="Alert Notifikasi">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-              </button>
-              <button type="button" class="icon-round-btn" id="btn-chart-quick-settings" title="Pengaturan Chart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
 
-        <!-- Symbol Selector Pills (Screen 3 Subbar) -->
-        <div class="symbol-selector-strip" id="chart-symbol-selector">
-          <button type="button" class="symbol-btn active" data-symbol="EURUSD">EURUSD</button>
-          <button type="button" class="symbol-btn" data-symbol="GBPUSD">GBPUSD</button>
-          <button type="button" class="symbol-btn" data-symbol="XAUUSD">XAUUSD</button>
-          <button type="button" class="symbol-btn" data-symbol="ALL" title="Tradingkan 3 Pair Sekaligus">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="2" y1="12" x2="22" y2="12"></line>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-            </svg>
-            <span>Semua Pair</span>
-          </button>
-          
+        <!-- TOP TOOLBAR: Symbol Selector + Timeframe Selector (Both at the TOP!) -->
+        <div class="chart-top-toolbar">
+          <!-- Symbol Selector Pills -->
+          <div class="symbol-selector-strip" id="chart-symbol-selector">
+            <button type="button" class="symbol-btn active" data-symbol="EURUSD">EURUSD</button>
+            <button type="button" class="symbol-btn" data-symbol="GBPUSD">GBPUSD</button>
+            <button type="button" class="symbol-btn" data-symbol="XAUUSD">XAUUSD</button>
+            <button type="button" class="symbol-btn" data-symbol="ALL" title="Tradingkan 3 Pair Sekaligus">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              <span>Semua Pair</span>
+            </button>
+          </div>
+
+          <!-- Timeframe Selector Pills (Moved to TOP!) -->
+          <div class="timeframe-capsule-bar" id="chart-tf-selector">
+            <button type="button" class="tf-btn" data-tf="M5">M5</button>
+            <button type="button" class="tf-btn active" data-tf="M15">M15</button>
+            <button type="button" class="tf-btn" data-tf="H1">H1</button>
+            <button type="button" class="tf-btn" data-tf="H4">H4</button>
+            <button type="button" class="tf-btn" data-tf="D1">D1</button>
+          </div>
+
           <div class="sync-status-indicator" id="chart-bot-sync-indicator">
             <span class="pulse-dot"></span>
             <span id="chart-sync-summary">EURUSD (M15)</span>
           </div>
+        </div>
+
+        <!-- TOP QUICK TRADE EXECUTION CARD (Moved to TOP directly above chart!) -->
+        <div class="top-trade-execution-card" id="quick-trade-bar">
+          
+          <!-- Lot Stepper Controller -->
+          <div class="qt-lot-controller">
+            <button type="button" class="btn-lot-step" id="btn-qt-lot-minus" title="Kurangi 0.01 Lot">−</button>
+            <div class="lot-input-wrapper">
+              <input type="number" id="qt-lot-input" value="0.01" step="0.01" min="0.01" max="10.0" title="Lot Size">
+              <span class="lot-unit-label">LOT</span>
+            </div>
+            <button type="button" class="btn-lot-step" id="btn-qt-lot-plus" title="Tambah 0.01 Lot">+</button>
+          </div>
+
+          <!-- Spread Pill Badge -->
+          <div class="spread-indicator-pill" id="qt-spread-badge">
+            <span class="spread-dot"></span>
+            <span class="spread-val" id="qt-spread-val">-- pts</span>
+            <span id="qt-active-symbol-label" style="display: none;">EURUSD</span>
+          </div>
+
+          <!-- Massive Primary Flame Orange BUY Pill -->
+          <button type="button" class="btn-screen3-buy" id="btn-quick-buy">
+            <span class="trade-action-name">Buy</span>
+            <span class="trade-action-price" id="qt-ask-price">--.---</span>
+          </button>
+
+          <!-- Charcoal SELL Pill -->
+          <button type="button" class="btn-screen3-sell" id="btn-quick-sell">
+            <span class="trade-action-name">Sell</span>
+            <span class="trade-action-price" id="qt-bid-price">--.---</span>
+          </button>
+
         </div>
 
         <!-- TradingView Lightweight Chart Canvas Container -->
@@ -443,49 +442,6 @@
               </button>
             </div>
           </div>
-        </div>
-
-        <!-- TIMEFRAME CAPSULE SELECTOR (Screen 3: M5, M15, H1, H4, D1) -->
-        <div class="timeframe-capsule-bar" id="chart-tf-selector">
-          <button type="button" class="tf-btn" data-tf="M5">M5</button>
-          <button type="button" class="tf-btn active" data-tf="M15">M15</button>
-          <button type="button" class="tf-btn" data-tf="H1">H1</button>
-          <button type="button" class="tf-btn" data-tf="H4">H4</button>
-          <button type="button" class="tf-btn" data-tf="D1">D1</button>
-        </div>
-
-        <!-- FIXED STICKY QUICK TRADE EXECUTION BAR (Always Pinned at Bottom of Viewport) -->
-        <div class="screen3-trade-dock" id="quick-trade-bar">
-          
-          <!-- Lot Stepper Controller -->
-          <div class="qt-lot-controller">
-            <button type="button" class="btn-lot-step" id="btn-qt-lot-minus" title="Kurangi 0.01 Lot">−</button>
-            <div class="lot-input-wrapper">
-              <input type="number" id="qt-lot-input" value="0.01" step="0.01" min="0.01" max="10.0" title="Lot Size">
-              <span class="lot-unit-label">LOT</span>
-            </div>
-            <button type="button" class="btn-lot-step" id="btn-qt-lot-plus" title="Tambah 0.01 Lot">+</button>
-          </div>
-
-          <!-- Spread Pill Badge -->
-          <div class="spread-indicator-pill" id="qt-spread-badge">
-            <span class="spread-dot"></span>
-            <span class="spread-val" id="qt-spread-val">-- pts</span>
-            <span id="qt-active-symbol-label" style="display: none;">EURUSD</span>
-          </div>
-
-          <!-- Massive Primary Flame Orange BUY Pill (Screen 3) -->
-          <button type="button" class="btn-screen3-buy" id="btn-quick-buy">
-            <span class="trade-action-name">Buy</span>
-            <span class="trade-action-price" id="qt-ask-price">--.---</span>
-          </button>
-
-          <!-- Charcoal SELL Pill (Screen 3) -->
-          <button type="button" class="btn-screen3-sell" id="btn-quick-sell">
-            <span class="trade-action-name">Sell</span>
-            <span class="trade-action-price" id="qt-bid-price">--.---</span>
-          </button>
-
         </div>
 
       </div>
@@ -740,15 +696,14 @@
                   <span class="box-badge">Auto-Connect</span>
                 </div>
 
-                <div class="form-row-2">
-                  <div class="form-field">
-                    <label for="cfg-mt5-account">Nomor Akun MT5 (Login ID)</label>
-                    <input type="number" id="cfg-mt5-account" placeholder="Contoh: 114546076">
-                  </div>
-                  <div class="form-field">
-                    <label for="cfg-mt5-password">Password MT5</label>
-                    <input type="password" id="cfg-mt5-password" placeholder="Password MT5 Anda">
-                  </div>
+                <div class="form-field">
+                  <label for="cfg-mt5-account">Nomor Akun MT5 (Login ID)</label>
+                  <input type="number" id="cfg-mt5-account" placeholder="Contoh: 114546076">
+                </div>
+
+                <div class="form-field">
+                  <label for="cfg-mt5-password">Password MT5</label>
+                  <input type="password" id="cfg-mt5-password" placeholder="Password MT5 Anda">
                 </div>
 
                 <div class="form-field">
@@ -969,24 +924,8 @@
 
           </div>
 
-          <!-- Bottom Status Note with Secondary Save Trigger -->
-          <div class="save-bar-card">
-            <div class="save-status-note">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon" style="color: var(--accent-green);">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-              <span>Perubahan parameter langsung diterapkan ke live engine tanpa perlu restart bot.</span>
-            </div>
-            <button type="button" class="btn-subtle-sm" id="btn-save-page-settings-bottom">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-              </svg>
-              <span>Simpan Pengaturan</span>
-            </button>
-          </div>
+          <!-- Hidden button placeholder so JS does not fail if referencing it -->
+          <button type="button" id="btn-save-page-settings-bottom" style="display: none;" aria-hidden="true"></button>
         </form>
 
       </div>
@@ -1148,6 +1087,6 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Main JavaScript Controller -->
-  <script src="/static/app.js?v=7.5"></script>
+  <script src="/static/app.js?v=8.0"></script>
 </body>
 </html>

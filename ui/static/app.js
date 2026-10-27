@@ -1401,8 +1401,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  let isSavingSettings = false;
   async function savePageSettings(e) {
     if (e) e.preventDefault();
+    if (isSavingSettings) return;
+    isSavingSettings = true;
 
     try {
       const resCfg = await fetch("/api/config");
@@ -1466,17 +1469,19 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (err) {
       showToast(`Error: ${err}`, "error");
+    } finally {
+      isSavingSettings = false;
     }
   }
 
   if (formPageSettings) formPageSettings.addEventListener("submit", savePageSettings);
-
   if (btnSavePageSettingsTop) {
-    btnSavePageSettingsTop.addEventListener("click", (e) => savePageSettings(e));
-  }
-  const btnSavePageSettingsBottom = document.getElementById("btn-save-page-settings-bottom");
-  if (btnSavePageSettingsBottom) {
-    btnSavePageSettingsBottom.addEventListener("click", (e) => savePageSettings(e));
+    btnSavePageSettingsTop.addEventListener("click", (e) => {
+      // If the button is not handled by submit event automatically, invoke savePageSettings
+      if (btnSavePageSettingsTop.type !== "submit") {
+        savePageSettings(e);
+      }
+    });
   }
 
   const btnSwitchMt5Account = document.getElementById("btn-switch-mt5-account");
