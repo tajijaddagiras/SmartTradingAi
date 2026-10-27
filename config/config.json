@@ -1,0 +1,54 @@
+{
+  "system": {
+    "mode": "live",
+    "loop_interval_seconds": 15,
+    "log_level": "INFO"
+  },
+  "mt5": {
+    "account": null,
+    "password": null,
+    "server": null,
+    "timeout_ms": 60000,
+    "path": null
+  },
+  "trading": {
+    "symbols": [
+      "EURUSD"
+    ],
+    "timeframe": "H1",
+    "magic_number": 889900
+  },
+  "risk": {
+    "use_fixed_lot": true,
+    "fixed_lot_size": 0.01,
+    "risk_per_trade_percent": 1.0,
+    "max_daily_drawdown_percent": 3.0,
+    "max_open_positions": 6,
+    "max_layers_per_symbol": 3,
+    "min_layer_distance_atr": 0.0,
+    "max_spread_points": 35
+  },
+  "confluence": {
+    "min_confluence_score": 3,
+    "ema_trend_period": 54,
+    "atr_period": 14,
+    "atr_multiplier_sl": 1.5,
+    "volume_ma_period": 20,
+    "volume_spike_multiplier": 1.3,
+    "swing_lookback": 10
+  },
+  "smart_trailing": {
+    "enabled": true,
+    "activation_atr_multiple": 1.0,
+    "trail_step_atr_multiple": 0.5,
+    "dynamic_exit_volume_exhaustion": true,
+    "volume_exhaustion_ratio": 0.45
+  },
+  "anti_sleep": {
+    "enabled": true
+  },
+  "licensing": {
+    "license_key": "NEXUS-TRIAL-2026",
+    "api_endpoint": "https://api.nexustrade.ai/v1/verify"
+  }
+}

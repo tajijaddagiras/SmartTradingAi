@@ -1,0 +1,9 @@
+MetaTrader5>=5.0.45
+pandas>=2.2.0
+numpy>=1.26.0
+pydantic>=2.7.0
+colorama>=0.4.6
+requests>=2.31.0
+fastapi>=0.110.0
+uvicorn>=0.28.0
+websockets>=12.0
