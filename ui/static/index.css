@@ -52,8 +52,8 @@
   --shadow-dock: 0 12px 36px rgba(0, 0, 0, 0.8);
   --shadow-orange: 0 6px 20px rgba(255, 85, 0, 0.35);
 
-  /* Header & Navigation Metrics */
-  --header-height: 59px;
+  /* Header & Navigation Metrics with Safe Area Insets (iOS & Android Notches) */
+  --header-height: calc(59px + env(safe-area-inset-top, 0px));
 
   /* Transitions */
   --trans-fast: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
@@ -74,10 +74,22 @@ html, body {
   font-size: 15px;
   line-height: 1.5;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   width: 100%;
   overflow-x: clip;
+  overscroll-behavior-y: none; /* Kunci layar: Mencegah layar ditarik ke bawah (rubber-band elastic bounce) */
+  overscroll-behavior-x: none;
+  -webkit-overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, textarea, select, [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* Tabular Financial Figures */
@@ -261,11 +273,14 @@ button {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(9, 10, 13, 0.92);
+  background: rgba(9, 10, 13, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-hairline);
-  padding: 10px 16px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+  padding-bottom: 10px;
+  padding-left: calc(env(safe-area-inset-left, 0px) + 16px);
+  padding-right: calc(env(safe-area-inset-right, 0px) + 16px);
   width: 100%;
 }
 
@@ -495,7 +510,10 @@ button {
    MAIN WORKSPACE & VIEW CONTAINERS
    =================================================================== */
 .app-main {
-  padding: 16px 14px 110px 14px;
+  padding-top: 16px;
+  padding-left: calc(env(safe-area-inset-left, 0px) + 14px);
+  padding-right: calc(env(safe-area-inset-right, 0px) + 14px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 110px);
   max-width: 1300px;
   margin: 0 auto;
   width: 100%;
@@ -1852,7 +1870,7 @@ button {
 /* STICKY TOP SAVE BAR */
 .settings-sticky-bar {
   position: sticky;
-  top: 56px;
+  top: var(--header-height, 56px);
   z-index: 95;
   background: rgba(19, 20, 26, 0.95);
   backdrop-filter: blur(20px);
@@ -2104,7 +2122,10 @@ button {
   left: 0;
   right: 0;
   z-index: 1000;
-  padding: 8px 16px 14px 16px;
+  padding-top: 8px;
+  padding-left: calc(env(safe-area-inset-left, 0px) + 16px);
+  padding-right: calc(env(safe-area-inset-right, 0px) + 16px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
   display: flex;
   justify-content: center;
   pointer-events: none;
@@ -2312,12 +2333,19 @@ button {
 
 /* Mobile Compact (< 768px): Hide verbose header capsules */
 @media (max-width: 767px) {
+  :root {
+    --header-height: calc(55px + env(safe-area-inset-top, 0px));
+  }
+
   .desktop-only-capsule {
     display: none !important;
   }
 
   .app-header {
-    padding: 8px 12px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+    padding-bottom: 8px;
+    padding-left: calc(env(safe-area-inset-left, 0px) + 12px);
+    padding-right: calc(env(safe-area-inset-right, 0px) + 12px);
   }
 
   .header-container {
@@ -2457,7 +2485,7 @@ button {
   }
 
   .settings-sticky-bar {
-    top: 52px;
+    top: var(--header-height, 52px);
     padding: 8px 12px;
     flex-direction: row;
     align-items: center;
