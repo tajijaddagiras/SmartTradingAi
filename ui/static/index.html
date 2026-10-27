@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/static/index.css?v=6.0">
-  <script src="/static/libs/lightweight-charts.js?v=6.0"></script>
+  <link rel="stylesheet" href="/static/index.css?v=7.5">
+  <script src="/static/libs/lightweight-charts.js?v=7.5"></script>
 </head>
 <body class="shakuro-theme">
 
@@ -40,68 +40,75 @@
   </div>
 
   <!-- =========================================================================
-       TOP GLOBAL HEADER (Screen 2 Top Bar: Avatar, Greeting, Quick Actions)
+       TOP GLOBAL HEADER (Screen 2: Clean, Responsive, Zero Overflow on Any Device)
        ========================================================================= -->
   <header class="app-header">
-    <div class="header-left">
-      <!-- Profile Bar from Screen 2 -->
-      <div class="user-profile-badge" id="btn-open-profile-card" title="Profil Akun & MT5 Live">
-        <div class="avatar-ring">
-          <div class="avatar-inner">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
+    <div class="header-container">
+      <div class="header-left">
+        <!-- Profile Bar from Screen 2 -->
+        <div class="user-profile-badge" id="btn-open-profile-card" title="Profil Akun & MT5 Live">
+          <div class="avatar-ring" id="avatar-status-ring">
+            <div class="avatar-inner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <span class="avatar-pulse-dot" id="header-avatar-dot"></span>
+          </div>
+          <div class="user-info">
+            <div class="user-greeting">Hello, Trader!</div>
+            <div class="user-subtext" id="header-user-account">MT5 Live Terminal</div>
           </div>
         </div>
-        <div class="user-info">
-          <div class="user-greeting">Hello, Trader!</div>
-          <div class="user-subtext" id="header-user-account">MT5 Live Terminal</div>
+      </div>
+
+      <!-- Action Strip: Compact on Mobile, Expanded on Desktop -->
+      <div class="header-right">
+        <!-- Currency Switcher Pill (IDR / USD) -->
+        <button type="button" class="pill-badge-btn" id="btn-currency-toggle" title="Ganti Tampilan Mata Uang (USD / IDR)">
+          <span class="curr-symbol-badge" id="curr-toggle-flag">IDR</span>
+          <span id="curr-toggle-text">Rp</span>
+        </button>
+
+        <!-- Bot Toggle Button (Pill style matching reference) -->
+        <button type="button" class="pill-btn-action" id="btn-toggle-bot">
+          <span class="bot-status-icon" id="bot-toggle-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </span>
+          <span class="bot-btn-label" id="bot-toggle-text">Start Bot</span>
+        </button>
+
+        <!-- Desktop-Only System Telemetry Micro-Pills -->
+        <div class="status-capsule desktop-only-capsule" id="mt5-status-pill" title="Status MetaTrader 5">
+          <span class="pulse-dot" id="mt5-status-dot"></span>
+          <span id="mt5-status-text">MT5: Connecting...</span>
         </div>
+
+        <div class="status-capsule desktop-only-capsule" id="anti-sleep-pill" title="Anti-Sleep VPS Guard">
+          <span class="pulse-dot" id="anti-sleep-dot"></span>
+          <span id="anti-sleep-text">Anti-Sleep: Idle</span>
+        </div>
+
+        <div class="status-capsule desktop-only-capsule" id="circuit-breaker-pill" title="Proteksi Drawdown">
+          <span id="circuit-breaker-text">Drawdown: Safe</span>
+          <button id="btn-reset-dd-header" class="btn-mini-reset" title="Buka Kunci Bot" style="display: none;">Reset</button>
+        </div>
+
+        <!-- Notification Bell Pill (Matching Screen 2 & 3 Top Right) -->
+        <button type="button" class="icon-round-btn" id="btn-header-bell" title="Notifikasi Sistem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </button>
+
+        <!-- Hidden Helper for Sync -->
+        <span id="val-server" style="display: none;">Server: Disconnected</span>
+        <span id="val-timeframe" style="display: none;">Timeframe: M15</span>
       </div>
-    </div>
-
-    <!-- Center/Right Quick Action Strip -->
-    <div class="header-right">
-      <!-- Currency Switcher Pill (IDR / USD) -->
-      <button type="button" class="pill-badge-btn" id="btn-currency-toggle" title="Ganti Tampilan Mata Uang (USD / IDR)">
-        <span id="curr-toggle-flag">🇮🇩</span>
-        <span id="curr-toggle-text">IDR (Rp)</span>
-      </button>
-
-      <!-- Bot Toggle Button (Pill style matching reference) -->
-      <button type="button" class="pill-btn-action" id="btn-toggle-bot">
-        <span class="bot-status-icon">▶</span>
-        <span class="bot-btn-label">Start Bot</span>
-      </button>
-
-      <!-- System Telemetry Micro-Pills -->
-      <div class="status-capsule" id="mt5-status-pill" title="Status MetaTrader 5">
-        <span class="pulse-dot" id="mt5-status-dot"></span>
-        <span id="mt5-status-text">MT5: Connecting...</span>
-      </div>
-
-      <div class="status-capsule" id="anti-sleep-pill" title="Anti-Sleep VPS Guard">
-        <span class="pulse-dot" id="anti-sleep-dot"></span>
-        <span id="anti-sleep-text">Anti-Sleep: Idle</span>
-      </div>
-
-      <div class="status-capsule" id="circuit-breaker-pill" title="Proteksi Drawdown">
-        <span id="circuit-breaker-text">Drawdown: Safe</span>
-        <button id="btn-reset-dd-header" class="btn-mini-reset" title="Buka Kunci Bot" style="display: none;">Reset</button>
-      </div>
-
-      <!-- Notification Bell Pill (Matching Screen 2 & 3 Top Right) -->
-      <button type="button" class="icon-round-btn" id="btn-header-bell" title="Notifikasi Sistem">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        </svg>
-      </button>
-
-      <!-- Hidden Helper for Sync -->
-      <span id="val-server" style="display: none;">Server: Disconnected</span>
-      <span id="val-timeframe" style="display: none;">Timeframe: M15</span>
     </div>
   </header>
 
@@ -157,8 +164,8 @@
             <button type="button" class="btn-hero-pill" id="btn-hero-currency-switch">
               <span class="hero-pill-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <polyline points="19 12 12 19 5 12"></polyline>
+                  <path d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+                  <path d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                 </svg>
               </span>
               <span id="hero-currency-label">Mata Uang: IDR (Rp)</span>
@@ -184,8 +191,13 @@
 
           <div class="funds-carousel" id="funds-carousel-list">
             <!-- Add / Customize Card -->
-            <div class="fund-card add-card" id="btn-add-symbol" title="Pilih Semua Pair">
-              <div class="add-icon-wrap">+</div>
+            <div class="fund-card add-card" id="btn-add-symbol" title="Pilih Semua 3 Pair">
+              <div class="add-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </div>
             </div>
 
             <!-- EURUSD Card (Bitcoin equivalent in Screen 2) -->
@@ -343,16 +355,24 @@
     </section>
 
     <!-- =======================================================================
-         VIEW 2: CHART & LIVE EXECUTION (Exact Screen 3 Detail / Terminal)
+         VIEW 2: CHART & LIVE EXECUTION (Exact Screen 3: Pinned Sticky Dock)
          ======================================================================= -->
     <section id="view-chart" class="app-view">
       <div class="chart-screen-container">
         
         <!-- Screen 3 Header: Big Pair Ticker, Massive Price, and 24h Change Badge -->
         <div class="screen3-header">
-          <div class="ticker-price-block">
-            <div class="active-ticker-label" id="chart-active-pair-name">EURUSD</div>
-            <div class="active-hero-price" id="chart-hero-price">1.08450</div>
+          <div class="ticker-left-wrap">
+            <button type="button" class="btn-chart-back" id="btn-chart-back-home" title="Kembali ke Dashboard">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="inline-svg-icon">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              <span>Home</span>
+            </button>
+            <div class="ticker-price-block">
+              <div class="active-ticker-label" id="chart-active-pair-name">EURUSD</div>
+              <div class="active-hero-price" id="chart-hero-price">1.08450</div>
+            </div>
           </div>
           <div class="ticker-change-block">
             <div class="screen3-change-badge" id="chart-hero-change">
@@ -381,7 +401,14 @@
           <button type="button" class="symbol-btn active" data-symbol="EURUSD">EURUSD</button>
           <button type="button" class="symbol-btn" data-symbol="GBPUSD">GBPUSD</button>
           <button type="button" class="symbol-btn" data-symbol="XAUUSD">XAUUSD</button>
-          <button type="button" class="symbol-btn" data-symbol="ALL" title="Tradingkan 3 Pair Sekaligus">🌐 Semua Pair</button>
+          <button type="button" class="symbol-btn" data-symbol="ALL" title="Tradingkan 3 Pair Sekaligus">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span>Semua Pair</span>
+          </button>
           
           <div class="sync-status-indicator" id="chart-bot-sync-indicator">
             <span class="pulse-dot"></span>
@@ -406,12 +433,19 @@
               <span class="tag-ob-bull"><span class="dot-ob-bull"></span>Bullish OB</span>
               <span class="tag-ob-bear"><span class="dot-ob-bear"></span>Bearish OB</span>
               <span class="tag-sl"><span class="dot-sl"></span>Hard SL</span>
-              <button type="button" id="btn-toggle-vol" class="btn-micro-vol">📊 Vol: ON</button>
+              <button type="button" id="btn-toggle-vol" class="btn-micro-vol">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span id="vol-toggle-label">Vol: ON</span>
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- TIMEFRAME CAPSULE SELECTOR (Matching Screen 3: D, W, M, 6M, Y, All) -->
+        <!-- TIMEFRAME CAPSULE SELECTOR (Screen 3: M5, M15, H1, H4, D1) -->
         <div class="timeframe-capsule-bar" id="chart-tf-selector">
           <button type="button" class="tf-btn" data-tf="M5">M5</button>
           <button type="button" class="tf-btn active" data-tf="M15">M15</button>
@@ -420,7 +454,7 @@
           <button type="button" class="tf-btn" data-tf="D1">D1</button>
         </div>
 
-        <!-- QUICK TRADE EXECUTION BAR (Exact Screen 3 Bottom Controls) -->
+        <!-- FIXED STICKY QUICK TRADE EXECUTION BAR (Always Pinned at Bottom of Viewport) -->
         <div class="screen3-trade-dock" id="quick-trade-bar">
           
           <!-- Lot Stepper Controller -->
@@ -458,7 +492,7 @@
     </section>
 
     <!-- =======================================================================
-         VIEW 3: TRADE (MT5 Live Open Positions & Floating P&L)
+         VIEW 3: TRADE (MT5 Live Open Positions & Floating P&L - 100% SVG Icons)
          ======================================================================= -->
     <section id="view-trade" class="app-view">
       <div class="trade-view-container">
@@ -467,7 +501,13 @@
         <div class="luxury-card mt5-summary-card">
           <div class="card-head-row">
             <div class="card-title-group">
-              <span class="card-icon-badge">📊</span>
+              <span class="card-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+              </span>
               <span class="card-title">Ringkasan Saldo & Margin Akun</span>
             </div>
             <span class="badge-tag" id="trade-view-acc-login">MT5 Live</span>
@@ -516,18 +556,40 @@
         <div class="luxury-card mt5-positions-card">
           <div class="card-head-row">
             <div class="card-title-group">
+              <span class="card-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                  <polyline points="16 7 22 7 22 13"></polyline>
+                </svg>
+              </span>
               <span class="card-title">Posisi Terbuka</span>
               <span class="badge-tag" id="trade-pos-count-tag">0 Posisi</span>
             </div>
             <div class="card-actions-group">
-              <button type="button" class="btn-subtle-sm" id="btn-refresh-positions">🔄 Refresh</button>
-              <button type="button" class="btn-danger-sm" id="btn-trade-flat-all">⚡ Tutup Semua (Flat All)</button>
+              <button type="button" class="btn-subtle-sm" id="btn-refresh-positions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                  <path d="M23 4v6h-6M1 20v-6h6"></path>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                <span>Refresh</span>
+              </button>
+              <button type="button" class="btn-danger-sm" id="btn-trade-flat-all">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span>Tutup Semua (Flat All)</span>
+              </button>
             </div>
           </div>
 
           <div class="mt5-positions-list" id="mt5-positions-container">
             <div class="empty-state-card">
-              <div class="empty-icon">📈</div>
+              <div class="empty-icon-svg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                  <polyline points="16 7 22 7 22 13"></polyline>
+                </svg>
+              </div>
               <div class="empty-text">Tidak ada posisi terbuka saat ini.</div>
               <div class="empty-subtext">Bot sedang memantau pasar. Saat konfluensi 3-faktor tercapai, order otomatis akan terbuka dan muncul di sini.</div>
             </div>
@@ -538,7 +600,7 @@
     </section>
 
     <!-- =======================================================================
-         VIEW 4: HISTORY (Closed Deals & Historical P&L)
+         VIEW 4: HISTORY (Closed Deals & Historical P&L - 100% SVG Icons)
          ======================================================================= -->
     <section id="view-history" class="app-view">
       <div class="history-view-container">
@@ -564,14 +626,30 @@
           </div>
 
           <div class="metric-card btn-card">
-            <button type="button" class="btn-subtle-sm full-btn" id="btn-refresh-history">🔄 Muat Ulang Riwayat</button>
+            <button type="button" class="btn-subtle-sm full-btn" id="btn-refresh-history">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                <path d="M23 4v6h-6M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span>Muat Ulang Riwayat</span>
+            </button>
           </div>
         </div>
 
         <!-- Deals Table -->
         <div class="luxury-card">
           <div class="card-head-row">
-            <div class="card-title">📜 Riwayat Transaksi MT5 (Closed Deals)</div>
+            <div class="card-title-group">
+              <span class="card-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+              </span>
+              <span class="card-title">Riwayat Transaksi MT5 (Closed Deals)</span>
+            </div>
             <span class="badge-tag">Closed Deals</span>
           </div>
 
@@ -601,48 +679,46 @@
     </section>
 
     <!-- =======================================================================
-         VIEW 5: SETTINGS (Configuration, Risk, AI Tuners, MT5 Switcher)
+         VIEW 5: SETTINGS (Sticky Header Action, Clean Form, 100% SVG Icons)
          ======================================================================= -->
     <section id="view-settings" class="app-view">
       <div class="settings-view-container">
         
-        <!-- Summary Cards Strip -->
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-title">Mode Eksekusi</div>
-            <div class="metric-value" id="settings-summary-mode">DEMO</div>
-            <div class="metric-sub" id="settings-summary-tf">Timeframe: M15</div>
+        <!-- STICKY TOP ACTION HEADER: Always Visible, Easy 1-Tap Save -->
+        <div class="settings-sticky-bar">
+          <div class="settings-header-text">
+            <h2 class="settings-main-title">Pengaturan Bot & Akun MT5</h2>
+            <p class="settings-main-subtitle">Konfigurasi akun broker MT5, parameter risiko, dan logika konfluensi</p>
           </div>
-
-          <div class="metric-card">
-            <div class="metric-title">Aset Aktif</div>
-            <div class="metric-value" id="settings-summary-symbols">3 Pairs</div>
-            <div class="metric-sub">EURUSD, GBPUSD, XAUUSD</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-title">Aturan Risiko</div>
-            <div class="metric-value positive" id="settings-summary-lot">0.01 Lot</div>
-            <div class="metric-sub" id="settings-summary-dd">Max DD: 3.0%</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-title">Konfluensi AI</div>
-            <div class="metric-value highlight" id="settings-summary-score">3 / 3 Factors</div>
-            <div class="metric-sub">EMA50 + SMC + Structure</div>
-          </div>
+          <button type="submit" form="form-page-settings" class="btn-hero-orange btn-save-sticky" id="btn-save-page-settings-top">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span>Simpan Perubahan</span>
+          </button>
         </div>
 
         <form id="form-page-settings" class="settings-form-layout">
           <div class="settings-cards-grid">
             
-            <!-- Card 1: Akun & Mode Eksekusi -->
+            <!-- Card 1: Akun Broker MT5 -->
             <div class="luxury-card">
               <div class="card-head-row">
-                <div class="card-title">💼 Akun & Mode Eksekusi</div>
+                <div class="card-title-group">
+                  <span class="card-icon-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                  </span>
+                  <span class="card-title">Koneksi Akun MetaTrader 5</span>
+                </div>
                 <span class="badge-tag" id="settings-active-account-mode-tag">Demo Mode</span>
               </div>
 
+              <!-- Active Status Banner -->
               <div class="account-active-banner">
                 <div>
                   <div class="banner-lbl">Akun MT5 Terhubung Saat Ini</div>
@@ -651,17 +727,23 @@
                 <div class="badge-status-pill" id="settings-active-status-indicator">DEMO SIMULASI</div>
               </div>
 
-              <!-- MT5 Account Switcher Box -->
+              <!-- MT5 Switcher Inputs -->
               <div class="account-connect-box">
                 <div class="box-head">
-                  <span class="box-title">🔑 Hubungkan Akun MT5 (Real / Demo Broker)</span>
-                  <span class="box-badge">Instant Auto-Switch</span>
+                  <span class="box-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                      <circle cx="7.5" cy="15.5" r="4.5"></circle>
+                      <path d="M21 3l-9.5 9.5M15.5 7.5L18 10M18 5l2.5 2.5"></path>
+                    </svg>
+                    <span>Ganti / Login Akun MT5 Baru</span>
+                  </span>
+                  <span class="box-badge">Auto-Connect</span>
                 </div>
 
                 <div class="form-row-2">
                   <div class="form-field">
                     <label for="cfg-mt5-account">Nomor Akun MT5 (Login ID)</label>
-                    <input type="number" id="cfg-mt5-account" placeholder="Contoh: 114546076 / Akun Real">
+                    <input type="number" id="cfg-mt5-account" placeholder="Contoh: 114546076">
                   </div>
                   <div class="form-field">
                     <label for="cfg-mt5-password">Password MT5</label>
@@ -671,7 +753,7 @@
 
                 <div class="form-field">
                   <label for="cfg-mt5-server">Server Broker MT5</label>
-                  <input type="text" id="cfg-mt5-server" list="mt5-server-list" placeholder="Ketik atau pilih server (misal Valetax-Live, Exness-Real, MetaQuotes-Demo)">
+                  <input type="text" id="cfg-mt5-server" list="mt5-server-list" placeholder="Contoh: Valetax-Live, Exness-Real, MetaQuotes-Demo">
                   <datalist id="mt5-server-list">
                     <option value="MetaQuotes-Demo">
                     <option value="Valetax-Live">
@@ -688,36 +770,66 @@
                 </div>
 
                 <button type="button" class="btn-hero-orange full-btn" id="btn-switch-mt5-account">
-                  🔗 Hubungkan & Terapkan Akun MT5 Ini
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                  <span>Hubungkan & Terapkan Akun MT5</span>
                 </button>
               </div>
+            </div>
 
-              <!-- Currency & FX Rate Controls -->
-              <div class="form-row-2" style="margin-top: 16px;">
-                <div class="form-field">
-                  <label for="cfg-display-currency">Mata Uang Tampilan</label>
-                  <select id="cfg-display-currency">
-                    <option value="IDR" selected>🇮🇩 IDR — Rupiah (Rp)</option>
-                    <option value="USD">🇺🇸 USD — Dollar ($)</option>
-                  </select>
+            <!-- Card 2: Preferensi Mata Uang & Kurs Pasar -->
+            <div class="luxury-card">
+              <div class="card-head-row">
+                <div class="card-title-group">
+                  <span class="card-icon-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 6v12M8 10h8"></path>
+                    </svg>
+                  </span>
+                  <span class="card-title">Mata Uang & Kurs Tampilan</span>
                 </div>
+                <span class="badge-tag">Currency FX</span>
+              </div>
 
-                <div class="form-field">
-                  <div class="field-label-split">
-                    <label for="cfg-idr-rate">Kurs (1 USD ke IDR)</label>
-                    <span id="rate-live-badge" class="badge-tag">🟢 Live Pasar</span>
-                  </div>
-                  <div class="input-with-button">
-                    <input type="number" id="cfg-idr-rate" value="18090" min="1000" max="100000">
-                    <button type="button" id="btn-sync-live-rate" class="btn-subtle-sm">🔄 Sync</button>
-                  </div>
+              <div class="form-field">
+                <label for="cfg-display-currency">Mata Uang Tampilan Utama</label>
+                <select id="cfg-display-currency">
+                  <option value="IDR" selected>IDR — Rupiah Indonesia (Rp)</option>
+                  <option value="USD">USD — US Dollar ($)</option>
+                </select>
+              </div>
+
+              <div class="form-field" style="margin-top: 8px;">
+                <div class="field-label-split">
+                  <label for="cfg-idr-rate">Kurs Konversi (1 USD ke IDR)</label>
+                  <span id="rate-live-badge" class="badge-tag">
+                    <span class="pulse-dot"></span> Live Pasar
+                  </span>
+                </div>
+                <div class="input-with-button">
+                  <input type="number" id="cfg-idr-rate" value="18090" min="1000" max="100000">
+                  <button type="button" id="btn-sync-live-rate" class="btn-subtle-sm" title="Sinkronkan dengan kurs pasar live">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                      <path d="M23 4v6h-6M1 20v-6h6"></path>
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    <span>Sync</span>
+                  </button>
                 </div>
               </div>
 
               <!-- Live Synced Indicator -->
-              <div class="sync-info-box">
+              <div class="sync-info-box" style="margin-top: 14px;">
                 <div class="sync-info-head">
-                  <span>⚡ Pair & Timeframe Bot (Tersinkron Otomatis)</span>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    <span>Pair & Timeframe Engine</span>
+                  </div>
                   <span class="badge-tag positive">Live Synced</span>
                 </div>
                 <div class="sync-info-body">
@@ -726,10 +838,17 @@
               </div>
             </div>
 
-            <!-- Card 2: Manajemen Risiko & Layering -->
+            <!-- Card 3: Manajemen Risiko & Layering -->
             <div class="luxury-card">
               <div class="card-head-row">
-                <div class="card-title">🛡️ Manajemen Risiko & Layering</div>
+                <div class="card-title-group">
+                  <span class="card-icon-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                  </span>
+                  <span class="card-title">Manajemen Risiko & Layering</span>
+                </div>
                 <span class="badge-tag">Safety Rules</span>
               </div>
 
@@ -756,29 +875,41 @@
               </div>
 
               <div class="form-field">
-                <button type="button" class="btn-subtle-sm full-btn" id="btn-reset-drawdown-settings">
-                  🔄 Reset Proteksi Harian Sekarang (Buka Kunci Bot)
-                </button>
-              </div>
-
-              <div class="form-field">
                 <label for="cfg-page-max-layers">Batas Maksimal Layer Per Aset (1 - 5 Layer)</label>
                 <input type="number" id="cfg-page-max-layers" value="3" min="1" max="5">
               </div>
+
+              <div class="form-field" style="margin-top: 6px;">
+                <button type="button" class="btn-subtle-sm full-btn" id="btn-reset-drawdown-settings">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                    <path d="M23 4v6h-6M1 20v-6h6"></path>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                  <span>Reset Proteksi Harian Sekarang (Buka Kunci Bot)</span>
+                </button>
+              </div>
             </div>
 
-            <!-- Card 3: Konfluensi & Strategy Tuner -->
+            <!-- Card 4: Konfluensi & Strategy Tuner -->
             <div class="luxury-card">
               <div class="card-head-row">
-                <div class="card-title">⚡ Confluence & Strategy Tuner</div>
+                <div class="card-title-group">
+                  <span class="card-icon-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                  </span>
+                  <span class="card-title">AI Confluence & Strategy Tuner</span>
+                </div>
                 <span class="badge-tag">AI Logic</span>
               </div>
 
               <div class="form-field">
                 <label for="cfg-page-min-confluence">Syarat Minimum Konfluensi Trigger</label>
                 <select id="cfg-page-min-confluence">
-                  <option value="2">2 / 3 (Aggressive / Cepat Masuk — Cocok Coba-Coba)</option>
-                  <option value="3" selected>3 / 3 (Strict Institutional — Standar Rekomendasi)</option>
+                  <option value="2">2 / 3 (Aggressive / Cepat Masuk — Coba-Coba)</option>
+                  <option value="3" selected>3 / 3 (Strict Institutional — Standar Disiplin)</option>
                 </select>
               </div>
 
@@ -799,16 +930,36 @@
               </div>
             </div>
 
-            <!-- Card 4: Diagnostik & Lisensi Sistem -->
+            <!-- Card 5: Diagnostik & Lisensi Sistem -->
             <div class="luxury-card">
               <div class="card-head-row">
-                <div class="card-title">🛠️ Alat Diagnostik & Lisensi SaaS</div>
+                <div class="card-title-group">
+                  <span class="card-icon-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                    </svg>
+                  </span>
+                  <span class="card-title">Alat Diagnostik & Lisensi</span>
+                </div>
                 <span class="badge-tag">Diagnostics</span>
               </div>
 
               <div class="form-row-2">
-                <button type="button" class="btn-subtle-sm" id="btn-settings-open-backtest">📊 Jalankan Backtest</button>
-                <button type="button" class="btn-subtle-sm" id="btn-settings-open-license">🔑 Cek Lisensi SaaS</button>
+                <button type="button" class="btn-subtle-sm" id="btn-settings-open-backtest">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                  </svg>
+                  <span>Jalankan Backtest</span>
+                </button>
+                <button type="button" class="btn-subtle-sm" id="btn-settings-open-license">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                    <circle cx="7.5" cy="15.5" r="4.5"></circle>
+                    <path d="M21 3l-9.5 9.5M15.5 7.5L18 10M18 5l2.5 2.5"></path>
+                  </svg>
+                  <span>Cek Lisensi SaaS</span>
+                </button>
               </div>
 
               <div class="hardware-id-box">
@@ -818,14 +969,22 @@
 
           </div>
 
-          <!-- Save Button Bar -->
+          <!-- Bottom Status Note with Secondary Save Trigger -->
           <div class="save-bar-card">
-            <div>
-              <div class="save-title">💾 Simpan Konfigurasi Bot</div>
-              <div class="save-sub">Perubahan parameter langsung diterapkan tanpa restart aplikasi.</div>
+            <div class="save-status-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon" style="color: var(--accent-green);">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>Perubahan parameter langsung diterapkan ke live engine tanpa perlu restart bot.</span>
             </div>
-            <button type="submit" class="btn-hero-orange" id="btn-save-page-settings-top">
-              💾 Simpan Semua Perubahan
+            <button type="button" class="btn-subtle-sm" id="btn-save-page-settings-bottom">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Simpan Pengaturan</span>
             </button>
           </div>
         </form>
@@ -866,7 +1025,7 @@
 
       <!-- 3. CENTER FLOATING ACTION BUTTON ⇄ (Signature Orange Circle from Reference) -->
       <div class="dock-center-fab-wrap">
-        <button type="button" class="dock-fab-btn" id="btn-dock-quick-fab" title="Quick Trade / Switch View">
+        <button type="button" class="dock-fab-btn" id="btn-dock-quick-fab" title="Quick Switch: Home / Terminal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
             <path d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
@@ -886,7 +1045,7 @@
         <span class="dock-label">Trade</span>
       </button>
 
-      <!-- 5. Settings / History -->
+      <!-- 5. Settings -->
       <button type="button" class="dock-item" id="nav-btn-settings" data-view="settings">
         <div class="dock-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -903,13 +1062,20 @@
   </nav>
 
   <!-- =========================================================================
-       MODALS: Backtest & License
+       MODALS: Backtest & License (100% Vector SVG Icons)
        ========================================================================= -->
   <!-- Backtest Modal -->
   <div class="modal-overlay" id="modal-backtest">
     <div class="modal-content">
       <div class="modal-head">
-        <h3>📊 Historical Backtest Runner</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: var(--accent-orange);">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <h3>Historical Backtest Runner</h3>
+        </div>
         <button type="button" class="btn-close-modal" id="btn-close-backtest">&times;</button>
       </div>
       <div class="form-row-2">
@@ -956,7 +1122,13 @@
   <div class="modal-overlay" id="modal-license">
     <div class="modal-content">
       <div class="modal-head">
-        <h3>🔑 SaaS License Manager</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: var(--accent-cyan);">
+            <circle cx="7.5" cy="15.5" r="4.5"></circle>
+            <path d="M21 3l-9.5 9.5M15.5 7.5L18 10M18 5l2.5 2.5"></path>
+          </svg>
+          <h3>SaaS License Manager</h3>
+        </div>
         <button type="button" class="btn-close-modal" id="btn-close-license">&times;</button>
       </div>
       <div class="form-field">
@@ -976,6 +1148,6 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Main JavaScript Controller -->
-  <script src="/static/app.js?v=6.0"></script>
+  <script src="/static/app.js?v=7.5"></script>
 </body>
 </html>

@@ -21,11 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateCurrencyButton() {
     if (currToggleFlag && currToggleText) {
       if (displayCurrency === "IDR") {
-        currToggleFlag.textContent = "🇮🇩";
-        currToggleText.textContent = "IDR (Rp)";
+        currToggleFlag.textContent = "IDR";
+        currToggleText.textContent = "Rp";
       } else {
-        currToggleFlag.textContent = "🇺🇸";
-        currToggleText.textContent = "USD ($)";
+        currToggleFlag.textContent = "USD";
+        currToggleText.textContent = "$";
       }
     }
     if (heroCurrencyLabel) {
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (cfgIdrRate) cfgIdrRate.value = idrExchangeRate;
         const badge = document.getElementById("rate-live-badge");
         if (badge) {
-          badge.textContent = `🟢 Live: Rp ${idrExchangeRate.toLocaleString("id-ID")}`;
+          badge.innerHTML = `<span class="pulse-dot"></span> Live: Rp ${idrExchangeRate.toLocaleString("id-ID")}`;
         }
         updateCurrencyButton();
         fetchStatus();
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         idrExchangeRate = v;
         localStorage.setItem("nexus_idr_rate", idrExchangeRate);
         const badge = document.getElementById("rate-live-badge");
-        if (badge) badge.textContent = "✏️ Custom";
+        if (badge) badge.textContent = "Custom";
         updateCurrencyButton();
         fetchStatus();
         fetchPositions();
@@ -216,22 +216,52 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Toast Notification
+  // Toast Notification (100% Vector SVG Icons)
   function showToast(message, type = "info") {
     const toast = document.createElement("div");
-    toast.className = "toast";
-    let icon = "ℹ️";
-    if (type === "success") icon = "✅";
-    if (type === "error") icon = "❌";
-    if (type === "warning") icon = "⚠️";
+    toast.className = "toast-msg";
+    
+    let iconSvg = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: var(--accent-cyan); flex-shrink: 0;">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+    `;
+    if (type === "success") {
+      iconSvg = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: var(--accent-green); flex-shrink: 0;">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      `;
+    } else if (type === "error") {
+      iconSvg = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: var(--accent-red); flex-shrink: 0;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+      `;
+    } else if (type === "warning") {
+      iconSvg = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: var(--accent-amber); flex-shrink: 0;">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      `;
+    }
 
-    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
-    toastContainer.appendChild(toast);
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      toast.style.transform = "translateY(10px)";
-      setTimeout(() => toast.remove(), 300);
-    }, 3500);
+    toast.innerHTML = `${iconSvg} <span>${message}</span>`;
+    if (toastContainer) {
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(8px)";
+        setTimeout(() => toast.remove(), 260);
+      }, 3500);
+    }
   }
 
   // =========================================================================
@@ -302,6 +332,11 @@ document.addEventListener("DOMContentLoaded", () => {
         switchView("home");
       }
     });
+  }
+
+  const btnChartBackHome = document.getElementById("btn-chart-back-home");
+  if (btnChartBackHome) {
+    btnChartBackHome.addEventListener("click", () => switchView("home"));
   }
 
   // Currency Switcher Toggle Handler
@@ -682,7 +717,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnToggleVol) {
     btnToggleVol.addEventListener("click", () => {
       isVolVisible = !isVolVisible;
-      btnToggleVol.textContent = isVolVisible ? "📊 Vol: ON" : "📊 Vol: OFF";
+      const volLabel = document.getElementById("vol-toggle-label");
+      if (volLabel) {
+        volLabel.textContent = isVolVisible ? "Vol: ON" : "Vol: OFF";
+      } else {
+        btnToggleVol.textContent = isVolVisible ? "Vol: ON" : "Vol: OFF";
+      }
       btnToggleVol.style.opacity = isVolVisible ? "1" : "0.5";
       if (volumeSeries) volumeSeries.applyOptions({ visible: isVolVisible });
     });
@@ -825,8 +865,27 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
 
       botIsRunning = data.bot_running;
-      btnToggleBot.innerHTML = botIsRunning ? '<span class="bot-status-icon">⏸</span> <span class="bot-btn-label">Pause Bot</span>' : '<span class="bot-status-icon">▶</span> <span class="bot-btn-label">Start Bot</span>';
       btnToggleBot.className = botIsRunning ? "pill-btn-action paused" : "pill-btn-action";
+      if (botIsRunning) {
+        btnToggleBot.innerHTML = `
+          <span class="bot-status-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 12px; height: 12px;">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          </span>
+          <span class="bot-btn-label">Pause Bot</span>
+        `;
+      } else {
+        btnToggleBot.innerHTML = `
+          <span class="bot-status-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 12px; height: 12px;">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </span>
+          <span class="bot-btn-label">Start Bot</span>
+        `;
+      }
 
       if (heroBotLabel) {
         heroBotLabel.textContent = botIsRunning ? "Pause Bot Engine" : "Start Bot Engine";
@@ -835,10 +894,15 @@ document.addEventListener("DOMContentLoaded", () => {
         btnHeroBotAction.style.borderColor = botIsRunning ? "rgba(239, 68, 68, 0.5)" : "var(--border-hairline)";
       }
 
+      const headerAvatarDot = document.getElementById("header-avatar-dot");
+      if (headerAvatarDot) {
+        headerAvatarDot.className = data.mt5_connected ? "avatar-pulse-dot" : "avatar-pulse-dot offline";
+      }
+
       if (data.mt5_connected) {
         mt5StatusDot.className = "pulse-dot";
         if (data.account && data.account.trade_allowed === false) {
-          mt5StatusText.innerHTML = `MT5: #${data.account.login || "Connected"} <span style="color: var(--accent-amber); font-weight:700;">(⚠️ Algo Trading OFF)</span>`;
+          mt5StatusText.innerHTML = `MT5: #${data.account.login || "Connected"} <span style="color: var(--accent-amber); font-weight:700;">(Algo Trading OFF)</span>`;
           if (mt5StatusPill) mt5StatusPill.title = "Tombol 'Algo Trading' di aplikasi MetaTrader 5 sedang NONAKTIF (Merah). Klik tombol Algo Trading di toolbar MT5 agar order dapat dieksekusi.";
         } else {
           mt5StatusText.textContent = `MT5: #${data.account?.login || "Connected"}`;
@@ -926,14 +990,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.anti_sleep_active) {
         antiSleepDot.className = "pulse-dot";
-        antiSleepText.textContent = "Anti-Sleep: Active 🛡️";
+        antiSleepText.textContent = "Anti-Sleep: Active";
       } else {
         antiSleepDot.className = "pulse-dot offline";
         antiSleepText.textContent = "Anti-Sleep: Idle";
       }
 
       if (data.drawdown.is_frozen) {
-        circuitBreakerText.textContent = "Drawdown: 🚨 FROZEN";
+        circuitBreakerText.textContent = "Drawdown: FROZEN";
         circuitBreakerText.style.color = "var(--accent-red)";
         if (btnResetDdHeader) btnResetDdHeader.style.display = "inline-block";
       } else {
@@ -1012,11 +1076,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (positions.length === 0) {
         const statusMsg = botIsRunning
           ? "Bot aktif dan sedang memantau peluang konfluensi untuk entri otomatis."
-          : "Bot sedang jeda (Paused). Klik '▶ Start Bot' di atas untuk mengaktifkan trading otomatis.";
+          : "Bot sedang jeda (Paused). Klik tombol Start Bot di atas untuk mengaktifkan trading otomatis.";
 
         mt5PositionsContainer.innerHTML = `
           <div class="empty-state-card">
-            <div class="empty-icon">📈</div>
+            <div class="empty-icon-svg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                <polyline points="16 7 22 7 22 13"></polyline>
+              </svg>
+            </div>
             <div class="empty-text">Tidak ada posisi terbuka saat ini.</div>
             <div class="empty-subtext">${statusMsg}</div>
           </div>
@@ -1076,7 +1145,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnTradeFlatAll) {
     btnTradeFlatAll.addEventListener("click", async () => {
-      if (!confirm("⚠️ PERINGATAN: Tutup SEMUA posisi terbuka sekarang juga (Flat All)?")) return;
+      if (!confirm("PERINGATAN: Tutup SEMUA posisi terbuka sekarang juga (Flat All)?")) return;
       const res = await fetch("/api/bot/flat", { method: "POST" });
       const data = await res.json();
       showToast(`Berhasil menutup ${data.closed_tickets.length} posisi terbuka.`, "warning");
@@ -1402,6 +1471,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (formPageSettings) formPageSettings.addEventListener("submit", savePageSettings);
 
+  if (btnSavePageSettingsTop) {
+    btnSavePageSettingsTop.addEventListener("click", (e) => savePageSettings(e));
+  }
+  const btnSavePageSettingsBottom = document.getElementById("btn-save-page-settings-bottom");
+  if (btnSavePageSettingsBottom) {
+    btnSavePageSettingsBottom.addEventListener("click", (e) => savePageSettings(e));
+  }
+
   const btnSwitchMt5Account = document.getElementById("btn-switch-mt5-account");
   if (btnSwitchMt5Account) {
     btnSwitchMt5Account.addEventListener("click", async () => {
@@ -1420,7 +1497,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const originalText = btnSwitchMt5Account.textContent;
       btnSwitchMt5Account.disabled = true;
-      btnSwitchMt5Account.textContent = "⏳ Menghubungkan ke Broker MT5...";
+      btnSwitchMt5Account.textContent = "Menghubungkan ke Broker MT5...";
 
       try {
         const res = await fetch("/api/mt5/switch-account", {
@@ -1469,7 +1546,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       document.getElementById("lic-hw-id").value = data.hardware_id || "IDENTIFYING...";
       const badge = document.getElementById("lic-status-badge");
-      badge.textContent = `Status: ${data.valid ? "✅ Active (" + data.tier + ")" : "❌ Invalid"}`;
+      badge.textContent = `Status: ${data.valid ? "Active (" + data.tier + ")" : "Invalid"}`;
       badge.style.color = data.valid ? "var(--accent-green)" : "var(--accent-red)";
     });
   }
@@ -1619,7 +1696,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("lic-hw-id").value = data.hardware_id || "IDENTIFYING...";
       document.getElementById("lic-key-input").value = "NEXUS-TRIAL-2026";
       const badge = document.getElementById("lic-status-badge");
-      badge.textContent = `Status: ${data.valid ? "✅ Active (" + data.tier + ")" : "❌ Invalid"}`;
+      badge.textContent = `Status: ${data.valid ? "Active (" + data.tier + ")" : "Invalid"}`;
       badge.style.color = data.valid ? "var(--accent-green)" : "var(--accent-red)";
     });
   }
