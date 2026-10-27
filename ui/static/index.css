@@ -1494,8 +1494,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  flex-wrap: nowrap;
 }
 
 .card-title-group {
@@ -1568,6 +1568,33 @@ button {
 
 .btn-danger-sm:hover {
   background: rgba(239, 68, 68, 0.25);
+}
+
+/* Compact Flat All Button Aligned with Posisi Terbuka Header */
+.btn-flat-compact {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  border-radius: var(--radius-pill);
+  padding: 5px 12px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--accent-red);
+  transition: var(--trans-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-flat-compact:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-flat-compact:active {
+  transform: translateY(1px);
 }
 
 /* MT5 Summary Telemetry Lines */
@@ -2402,6 +2429,26 @@ button {
 
   .lot-unit-label {
     font-size: 0.60rem;
+  }
+
+  .card-head-row {
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .card-title {
+    font-size: 0.88rem;
+  }
+
+  .btn-flat-compact {
+    padding: 4px 9px;
+    font-size: 0.70rem;
+    gap: 4px;
+  }
+
+  .btn-flat-compact svg {
+    width: 11px;
+    height: 11px;
   }
 
   .settings-cards-grid {

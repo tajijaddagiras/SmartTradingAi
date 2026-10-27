@@ -117,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const tradePosCountTag = document.getElementById("trade-pos-count-tag");
   const mt5PositionsContainer = document.getElementById("mt5-positions-container");
   const btnTradeFlatAll = document.getElementById("btn-trade-flat-all");
-  const btnRefreshPositions = document.getElementById("btn-refresh-positions");
 
   // Bottom Navigation & Dock
   const navBtnHome = document.getElementById("nav-btn-home");
@@ -1135,14 +1134,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Trade Page Controls
-  if (btnRefreshPositions) {
-    btnRefreshPositions.addEventListener("click", () => {
-      fetchPositions();
-      fetchStatus();
-      showToast("Data posisi diperbarui.", "info");
-    });
-  }
-
   if (btnTradeFlatAll) {
     btnTradeFlatAll.addEventListener("click", async () => {
       if (!confirm("PERINGATAN: Tutup SEMUA posisi terbuka sekarang juga (Flat All)?")) return;

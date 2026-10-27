@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/static/index.css?v=8.1">
-  <script src="/static/libs/lightweight-charts.js?v=8.1"></script>
+  <link rel="stylesheet" href="/static/index.css?v=8.2">
+  <script src="/static/libs/lightweight-charts.js?v=8.2"></script>
 </head>
 <body class="shakuro-theme">
 
@@ -520,21 +520,12 @@
               <span class="card-title">Posisi Terbuka</span>
               <span class="badge-tag" id="trade-pos-count-tag">0 Posisi</span>
             </div>
-            <div class="card-actions-group">
-              <button type="button" class="btn-subtle-sm" id="btn-refresh-positions">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
-                  <path d="M23 4v6h-6M1 20v-6h6"></path>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                </svg>
-                <span>Refresh</span>
-              </button>
-              <button type="button" class="btn-danger-sm" id="btn-trade-flat-all">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-                <span>Tutup Semua (Flat All)</span>
-              </button>
-            </div>
+            <button type="button" class="btn-danger-sm btn-flat-compact" id="btn-trade-flat-all" title="Tutup Semua Posisi Terbuka">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <span>Tutup Semua</span>
+            </button>
           </div>
 
           <div class="mt5-positions-list" id="mt5-positions-container">
@@ -1086,6 +1077,6 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Main JavaScript Controller -->
-  <script src="/static/app.js?v=8.1"></script>
+  <script src="/static/app.js?v=8.2"></script>
 </body>
 </html>
