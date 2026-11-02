@@ -4,7 +4,10 @@ Handles initialization, account authentication, heartbeat, and reconnection logi
 """
 
 from typing import Optional, Dict, Any
-import MetaTrader5 as mt5
+try:
+    import MetaTrader5 as mt5
+except ImportError:
+    import mt5_bridge.mt5_stub as mt5
 from config.settings import AppConfig, load_config, save_config
 from core.logger import logger
 

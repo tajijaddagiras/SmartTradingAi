@@ -5,7 +5,10 @@ and Emergency 'Flat Before Close' executions.
 """
 
 from typing import Optional, List, Dict, Any
-import MetaTrader5 as mt5
+try:
+    import MetaTrader5 as mt5
+except ImportError:
+    import mt5_bridge.mt5_stub as mt5
 from config.settings import AppConfig, load_config
 from mt5_bridge.connector import mt5_connector
 from core.logger import logger, log_trade

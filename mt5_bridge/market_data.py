@@ -7,7 +7,10 @@ Converts raw MT5 structs into clean, typed Pandas DataFrames.
 import time
 from typing import Optional, Dict, Any
 import pandas as pd
-import MetaTrader5 as mt5
+try:
+    import MetaTrader5 as mt5
+except ImportError:
+    import mt5_bridge.mt5_stub as mt5
 from mt5_bridge.connector import mt5_connector
 from core.logger import logger
 
