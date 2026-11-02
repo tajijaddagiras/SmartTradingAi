@@ -455,26 +455,46 @@ class ManualOrderPayload(BaseModel):
 
 
 class ModifyPositionPayload(BaseModel):
+    ticket: Optional[int] = None
     sl: Optional[float] = None
     tp: Optional[float] = None
 
 
 @app.post("/api/positions/{ticket}/modify")
-async def modify_position(ticket: int, payload: ModifyPositionPayload):
+async def modify_position_by_ticket(ticket: int, payload: ModifyPositionPayload):
     """
     Modifies Stop Loss and/or Take Profit for an open position from the interactive chart UI.
     """
-    success = order_executor.modify_sltp(ticket, sl=payload.sl, tp=payload.tp)
+    success = order_executor.modify_position(ticket, sl=payload.sl, tp=payload.tp) if hasattr(order_executor, "modify_position") else order_executor.modify_sltp(ticket, sl=payload.sl, tp=payload.tp)
     if not success:
         raise HTTPException(status_code=400, detail=f"Gagal memodifikasi SL/TP untuk posisi #{ticket}")
     return {"success": True, "ticket": ticket, "sl": payload.sl, "tp": payload.tp}
+
+
+@app.post("/api/trading/modify-position")
+async def modify_position(payload: ModifyPositionPayload):
+    """Updates Stop Loss and/or Take Profit for an active MT5 position from interactive chart lines."""
+    t = payload.ticket
+    if not t:
+        raise HTTPException(status_code=400, detail="Ticket posisi wajib diisi.")
+    success = order_executor.modify_position(t, sl=payload.sl, tp=payload.tp)
+    if not success:
+        err = getattr(order_executor, "last_error_message", None) or "Gagal memperbarui SL/TP di broker MT5."
+        raise HTTPException(status_code=400, detail=err)
+    return {
+        "success": True,
+        "ticket": t,
+        "sl": payload.sl,
+        "tp": payload.tp,
+        "message": f"Posisi #{t} berhasil diperbarui di broker."
+    }
 
 
 @app.post("/api/trading/manual-order")
 async def execute_manual_order(payload: ManualOrderPayload):
     """
     Executes a manual market order from the Quick Trade Bar.
-    Automatically assigns institutional Stop Loss calculated from ATR / Market Structure.
+    Supports interactive SL/TP set directly from the chart, or falls back to ATR calculation.
     """
     action = payload.action.upper().strip()
     if action not in ("BUY", "SELL"):
@@ -498,29 +518,46 @@ async def execute_manual_order(payload: ManualOrderPayload):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal mengambil harga tick {symbol}: {e}")
 
-    # Compute Smart Institutional Stop Loss
+    # Compute Smart Institutional Stop Loss or use Interactive SL
     sl = 0.0
-    if not raw_df.empty:
-        df_ind = indicators.append_all_indicators(raw_df, atr_period=cfg.confluence.atr_period)
-        atr_val = float(df_ind["atr"].dropna().iloc[-1]) if "atr" in df_ind.columns and not df_ind["atr"].dropna().empty else 0.0015
-        struct = market_structure_analyzer.analyze_structure(raw_df, lookback=cfg.confluence.swing_lookback)
+    if payload.sl is not None and float(payload.sl) > 0:
+        custom_sl = float(payload.sl)
+        if action == "BUY" and custom_sl < price:
+            sl = custom_sl
+        elif action == "SELL" and custom_sl > price:
+            sl = custom_sl
 
-        if action == "BUY":
-            sup = struct.get("support_level")
-            if sup and sup < price:
-                sl = sup - (0.5 * atr_val)
-            else:
-                sl = price - (1.5 * atr_val)
-        else: # SELL
-            res = struct.get("resistance_level")
-            if res and res > price:
-                sl = res + (0.5 * atr_val)
-            else:
-                sl = price + (1.5 * atr_val)
-    else:
-        digits = 5 if ("XAU" not in symbol and "JPY" not in symbol) else 2
-        offset = 0.0020 if digits == 5 else 2.50
-        sl = (price - offset) if action == "BUY" else (price + offset)
+    if sl <= 0.0:
+        if not raw_df.empty:
+            df_ind = indicators.append_all_indicators(raw_df, atr_period=cfg.confluence.atr_period)
+            atr_val = float(df_ind["atr"].dropna().iloc[-1]) if "atr" in df_ind.columns and not df_ind["atr"].dropna().empty else 0.0015
+            struct = market_structure_analyzer.analyze_structure(raw_df, lookback=cfg.confluence.swing_lookback)
+
+            if action == "BUY":
+                sup = struct.get("support_level")
+                if sup and sup < price:
+                    sl = sup - (0.5 * atr_val)
+                else:
+                    sl = price - (1.5 * atr_val)
+            else: # SELL
+                res = struct.get("resistance_level")
+                if res and res > price:
+                    sl = res + (0.5 * atr_val)
+                else:
+                    sl = price + (1.5 * atr_val)
+        else:
+            digits = 5 if ("XAU" not in symbol and "JPY" not in symbol) else 2
+            offset = 0.0020 if digits == 5 else 2.50
+            sl = (price - offset) if action == "BUY" else (price + offset)
+
+    # Take Profit computation or use Interactive TP
+    tp = None
+    if payload.tp is not None and float(payload.tp) > 0:
+        custom_tp = float(payload.tp)
+        if action == "BUY" and custom_tp > price:
+            tp = custom_tp
+        elif action == "SELL" and custom_tp < price:
+            tp = custom_tp
 
     # Override with user-defined SL/TP if provided
     if payload.sl is not None and payload.sl > 0:
@@ -534,7 +571,7 @@ async def execute_manual_order(payload: ManualOrderPayload):
         lot=lot,
         sl=sl,
         tp=tp,
-        rationale="Manual Quick Trade"
+        rationale="Manual Quick Trade (Interactive SL/TP)"
     )
 
     if not ticket:
@@ -543,6 +580,7 @@ async def execute_manual_order(payload: ManualOrderPayload):
 
     anti_sleep_manager.prevent_sleep()
 
+    tp_msg = f", TP: {tp:.5f}" if tp else ""
     return {
         "success": True,
         "ticket": ticket,
@@ -551,7 +589,8 @@ async def execute_manual_order(payload: ManualOrderPayload):
         "lot": lot,
         "price": price,
         "sl": sl,
-        "message": f"Posisi {action} {lot:.2f} {symbol} berhasil dibuka @ {price} (Hard SL: {sl:.5f})"
+        "tp": tp,
+        "message": f"Posisi {action} {lot:.2f} {symbol} berhasil dibuka @ {price} (Hard SL: {sl:.5f}{tp_msg})"
     }
 
 

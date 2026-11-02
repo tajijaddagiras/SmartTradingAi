@@ -177,6 +177,27 @@ document.addEventListener("DOMContentLoaded", () => {
   let emaSeries = null;
   let activePriceLines = [];
 
+  // Interactive Draggable Chart Lines (TP & SL) State
+  let interactiveSL = null;
+  let interactiveTP = null;
+  let isDraggingSL = false;
+  let isDraggingTP = false;
+  let interactiveLinesEnabled = true;
+
+  const dragLayer = document.getElementById("chart-drag-layer");
+  const dragLineTP = document.getElementById("drag-line-tp");
+  const handleTP = document.getElementById("handle-tp");
+  const dragPriceTP = document.getElementById("drag-price-tp");
+  const dragLineSL = document.getElementById("drag-line-sl");
+  const handleSL = document.getElementById("handle-sl");
+  const dragPriceSL = document.getElementById("drag-price-sl");
+  const qtValSL = document.getElementById("qt-val-sl");
+  const qtValTP = document.getElementById("qt-val-tp");
+  const btnToggleDragLines = document.getElementById("btn-toggle-drag-lines");
+  const dragToggleLabel = document.getElementById("drag-toggle-label");
+  const chipSltpSL = document.getElementById("chip-sltp-sl");
+  const chipSltpTP = document.getElementById("chip-sltp-tp");
+
   let botIsRunning = false;
   let currentMinScore = 3;
   let accountCurrency = "$";
@@ -385,6 +406,244 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
+  // INTERACTIVE DRAGGABLE TP & SL ENGINE (CHART OVERLAY)
+  // =========================================================================
+  function updateQtSltpStrip() {
+    const { precision } = getSymbolPrecision(selectedSymbol);
+    if (qtValSL) {
+      qtValSL.textContent = (interactiveSL && interactiveSL > 0) ? interactiveSL.toFixed(precision) : "--.-----";
+    }
+    if (qtValTP) {
+      qtValTP.textContent = (interactiveTP && interactiveTP > 0) ? interactiveTP.toFixed(precision) : "--.-----";
+    }
+  }
+
+  function initDefaultSltpLevels(currentPrice, atrVal) {
+    if (!currentPrice || currentPrice <= 0) return;
+    const { precision } = getSymbolPrecision(selectedSymbol);
+    const atr = (atrVal && atrVal > 0) ? atrVal : (currentPrice * 0.0015);
+
+    if (interactiveTP === null) {
+      interactiveTP = Number((currentPrice + (2.0 * atr)).toFixed(precision));
+    }
+    if (interactiveSL === null) {
+      interactiveSL = Number((currentPrice - (1.5 * atr)).toFixed(precision));
+    }
+    updateQtSltpStrip();
+  }
+
+  function updateInteractiveLinesPosition() {
+    if (!chart || !candlestickSeries || !interactiveLinesEnabled) {
+      if (dragLineTP) dragLineTP.style.display = "none";
+      if (dragLineSL) dragLineSL.style.display = "none";
+      return;
+    }
+
+    const { precision } = getSymbolPrecision(selectedSymbol);
+    const chartHeight = chartContainer ? chartContainer.clientHeight : 380;
+
+    // Update Take Profit Line (Green)
+    if (dragLineTP && interactiveTP && interactiveTP > 0 && !isDraggingTP) {
+      try {
+        const yTP = candlestickSeries.priceToCoordinate(interactiveTP);
+        if (yTP !== null && !isNaN(yTP) && yTP >= -15 && yTP <= chartHeight + 15) {
+          dragLineTP.style.display = "block";
+          dragLineTP.style.top = `${yTP}px`;
+          if (dragPriceTP) dragPriceTP.textContent = interactiveTP.toFixed(precision);
+        } else {
+          dragLineTP.style.display = "none";
+        }
+      } catch (err) {
+        dragLineTP.style.display = "none";
+      }
+    }
+
+    // Update Stop Loss Line (Red)
+    if (dragLineSL && interactiveSL && interactiveSL > 0 && !isDraggingSL) {
+      try {
+        const ySL = candlestickSeries.priceToCoordinate(interactiveSL);
+        if (ySL !== null && !isNaN(ySL) && ySL >= -15 && ySL <= chartHeight + 15) {
+          dragLineSL.style.display = "block";
+          dragLineSL.style.top = `${ySL}px`;
+          if (dragPriceSL) dragPriceSL.textContent = interactiveSL.toFixed(precision);
+        } else {
+          dragLineSL.style.display = "none";
+        }
+      } catch (err) {
+        dragLineSL.style.display = "none";
+      }
+    }
+
+    updateQtSltpStrip();
+  }
+
+  async function syncPositionModification(ticket, sl, tp) {
+    try {
+      const res = await fetch("/api/trading/modify-position", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticket, sl, tp })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || `Posisi #${ticket} SL/TP berhasil disesuaikan di MT5!`, "success");
+        fetchPositions();
+      } else {
+        showToast(`Gagal update posisi #${ticket}: ${data.detail || data.error}`, "error");
+      }
+    } catch (e) {
+      showToast(`Gagal koneksi saat update posisi: ${e}`, "error");
+    }
+  }
+
+  function setupDraggableLines() {
+    if (!handleTP || !handleSL || !chartContainer) return;
+
+    function getActivePositionForCurrentSymbol() {
+      if (window._lastPositions && Array.isArray(window._lastPositions)) {
+        return window._lastPositions.find((p) => p.symbol === selectedSymbol);
+      }
+      return null;
+    }
+
+    // --- Take Profit Drag Event Listeners ---
+    function onPointerDownTP(e) {
+      e.preventDefault();
+      isDraggingTP = true;
+      if (dragLineTP) dragLineTP.classList.add("dragging");
+      try { handleTP.setPointerCapture(e.pointerId); } catch (err) {}
+      window.addEventListener("pointermove", onPointerMoveTP, { passive: false });
+      window.addEventListener("pointerup", onPointerUpTP);
+      window.addEventListener("pointercancel", onPointerUpTP);
+    }
+
+    function onPointerMoveTP(e) {
+      if (!isDraggingTP || !candlestickSeries) return;
+      e.preventDefault();
+      const rect = chartContainer.getBoundingClientRect();
+      const relativeY = e.clientY - rect.top;
+      const clampedY = Math.max(10, Math.min(chartContainer.clientHeight - 10, relativeY));
+      const price = candlestickSeries.coordinateToPrice(clampedY);
+
+      if (price !== null && !isNaN(price)) {
+        const { precision, minMove } = getSymbolPrecision(selectedSymbol);
+        interactiveTP = Number((Math.round(price / minMove) * minMove).toFixed(precision));
+        if (dragLineTP) dragLineTP.style.top = `${clampedY}px`;
+        if (dragPriceTP) dragPriceTP.textContent = interactiveTP.toFixed(precision);
+        if (qtValTP) qtValTP.textContent = interactiveTP.toFixed(precision);
+      }
+    }
+
+    async function onPointerUpTP(e) {
+      if (!isDraggingTP) return;
+      isDraggingTP = false;
+      if (dragLineTP) dragLineTP.classList.remove("dragging");
+      try { handleTP.releasePointerCapture(e.pointerId); } catch (err) {}
+      window.removeEventListener("pointermove", onPointerMoveTP);
+      window.removeEventListener("pointerup", onPointerUpTP);
+      window.removeEventListener("pointercancel", onPointerUpTP);
+
+      updateInteractiveLinesPosition();
+
+      const pos = getActivePositionForCurrentSymbol();
+      if (pos) {
+        await syncPositionModification(pos.ticket, pos.sl, interactiveTP);
+      } else {
+        showToast(`Target Take Profit (TP) disetel ke: ${interactiveTP}`, "info");
+      }
+    }
+
+    handleTP.addEventListener("pointerdown", onPointerDownTP);
+
+    // --- Stop Loss Drag Event Listeners ---
+    function onPointerDownSL(e) {
+      e.preventDefault();
+      isDraggingSL = true;
+      if (dragLineSL) dragLineSL.classList.add("dragging");
+      try { handleSL.setPointerCapture(e.pointerId); } catch (err) {}
+      window.addEventListener("pointermove", onPointerMoveSL, { passive: false });
+      window.addEventListener("pointerup", onPointerUpSL);
+      window.addEventListener("pointercancel", onPointerUpSL);
+    }
+
+    function onPointerMoveSL(e) {
+      if (!isDraggingSL || !candlestickSeries) return;
+      e.preventDefault();
+      const rect = chartContainer.getBoundingClientRect();
+      const relativeY = e.clientY - rect.top;
+      const clampedY = Math.max(10, Math.min(chartContainer.clientHeight - 10, relativeY));
+      const price = candlestickSeries.coordinateToPrice(clampedY);
+
+      if (price !== null && !isNaN(price)) {
+        const { precision, minMove } = getSymbolPrecision(selectedSymbol);
+        interactiveSL = Number((Math.round(price / minMove) * minMove).toFixed(precision));
+        if (dragLineSL) dragLineSL.style.top = `${clampedY}px`;
+        if (dragPriceSL) dragPriceSL.textContent = interactiveSL.toFixed(precision);
+        if (qtValSL) qtValSL.textContent = interactiveSL.toFixed(precision);
+      }
+    }
+
+    async function onPointerUpSL(e) {
+      if (!isDraggingSL) return;
+      isDraggingSL = false;
+      if (dragLineSL) dragLineSL.classList.remove("dragging");
+      try { handleSL.releasePointerCapture(e.pointerId); } catch (err) {}
+      window.removeEventListener("pointermove", onPointerMoveSL);
+      window.removeEventListener("pointerup", onPointerUpSL);
+      window.removeEventListener("pointercancel", onPointerUpSL);
+
+      updateInteractiveLinesPosition();
+
+      const pos = getActivePositionForCurrentSymbol();
+      if (pos) {
+        await syncPositionModification(pos.ticket, interactiveSL, pos.tp);
+      } else {
+        showToast(`Target Stop Loss (SL) disetel ke: ${interactiveSL}`, "info");
+      }
+    }
+
+    handleSL.addEventListener("pointerdown", onPointerDownSL);
+
+    // Toggle button for drag lines
+    if (btnToggleDragLines) {
+      btnToggleDragLines.addEventListener("click", () => {
+        interactiveLinesEnabled = !interactiveLinesEnabled;
+        if (dragToggleLabel) {
+          dragToggleLabel.textContent = interactiveLinesEnabled ? "Garis TP/SL: ON" : "Garis TP/SL: OFF";
+        }
+        btnToggleDragLines.style.opacity = interactiveLinesEnabled ? "1" : "0.5";
+        updateInteractiveLinesPosition();
+        showToast(`Garis interaktif TP/SL ${interactiveLinesEnabled ? "diaktifkan" : "disembunyikan"}`, "info");
+      });
+    }
+
+    // Clicking chips resets or snaps lines into view
+    if (chipSltpSL) {
+      chipSltpSL.addEventListener("click", () => {
+        if (!interactiveLinesEnabled) {
+          interactiveLinesEnabled = true;
+          if (dragToggleLabel) dragToggleLabel.textContent = "Garis TP/SL: ON";
+          if (btnToggleDragLines) btnToggleDragLines.style.opacity = "1";
+        }
+        updateInteractiveLinesPosition();
+        showToast(`Garis Stop Loss (SL): ${interactiveSL || "Menyesuaikan harga live"}`, "info");
+      });
+    }
+
+    if (chipSltpTP) {
+      chipSltpTP.addEventListener("click", () => {
+        if (!interactiveLinesEnabled) {
+          interactiveLinesEnabled = true;
+          if (dragToggleLabel) dragToggleLabel.textContent = "Garis TP/SL: ON";
+          if (btnToggleDragLines) btnToggleDragLines.style.opacity = "1";
+        }
+        updateInteractiveLinesPosition();
+        showToast(`Garis Take Profit (TP): ${interactiveTP || "Menyesuaikan harga live"}`, "info");
+      });
+    }
+  }
+
+  // =========================================================================
   // TRADINGVIEW LIGHTWEIGHT CHARTS INITIALIZATION
   // =========================================================================
   function initChart() {
@@ -504,10 +763,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const { width } = entries[0].contentRect;
         const h = getResponsiveChartHeight();
         if (width > 0) chart.applyOptions({ width, height: h });
+        setTimeout(updateInteractiveLinesPosition, 60);
       }
     });
     resizeObserver.observe(chartContainer);
 
+    chart.timeScale().subscribeVisibleTimeRangeChange(() => {
+      updateInteractiveLinesPosition();
+    });
+    chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+      updateInteractiveLinesPosition();
+    });
+
+    setupDraggableLines();
     fetchChartData();
   }
 
@@ -632,10 +900,10 @@ document.addEventListener("DOMContentLoaded", () => {
           updateQuickTradeBar(data.current_tick);
         }
 
-        // Re-apply user manual interactive TP/SL lines on chart refresh
-        if (typeof updateInteractiveLines === "function") {
-          updateInteractiveLines();
+        if (lastBar) {
+          initDefaultSltpLevels(lastBar.close, data.atr);
         }
+        updateInteractiveLinesPosition();
       }
     } catch (e) {
       console.error("fetchChartData error", e);
@@ -700,6 +968,8 @@ document.addEventListener("DOMContentLoaded", () => {
         activeSymbols = [sym];
         selectedSymbol = sym;
         localStorage.setItem("nexus_selected_symbol", selectedSymbol);
+        interactiveSL = null;
+        interactiveTP = null;
         showToast(`Bot disinkronkan: Fokus HANYA trading pada pair ${sym}!`, "success");
       }
 
@@ -937,8 +1207,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const payload = { symbol: sym, action: action, lot: lot };
-      if (userSl && userSl > 0) payload.sl = userSl;
-      if (userTp && userTp > 0) payload.tp = userTp;
+      if (interactiveSL !== null && interactiveSL > 0) payload.sl = interactiveSL;
+      if (interactiveTP !== null && interactiveTP > 0) payload.tp = interactiveTP;
 
       const res = await fetch("/api/trading/manual-order", {
         method: "POST",
@@ -1172,6 +1442,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/api/positions");
       const data = await res.json();
       const positions = data.positions || [];
+      window._lastPositions = positions;
+
+      // Sync active position SL & TP to interactive chart lines if available
+      if (!isDraggingSL && !isDraggingTP && positions.length > 0) {
+        const pos = positions.find((p) => p.symbol === selectedSymbol);
+        if (pos) {
+          if (pos.sl > 0) interactiveSL = pos.sl;
+          if (pos.tp > 0) interactiveTP = pos.tp;
+          updateInteractiveLinesPosition();
+        }
+      }
 
       // Update Bottom Nav Badge
       if (navTradeBadge) {

@@ -433,6 +433,30 @@
             <span id="qt-active-symbol-label">EURUSD</span>
           </div>
 
+          <!-- Interactive SL & TP Status Strip (Synchronized directly with chart drag lines) -->
+          <div class="qt-sltp-status-strip" id="qt-sltp-strip">
+            <div class="sltp-chip chip-sl" id="chip-sltp-sl" title="Garis Stop Loss interaktif di chart (klik atau geser langsung di grafik)">
+              <span class="sltp-dot dot-sl"></span>
+              <span class="sltp-lbl">SL</span>
+              <span class="sltp-val" id="qt-val-sl">--.-----</span>
+            </div>
+            
+            <div class="sltp-hint" title="Sentuh & geser garis putus-putus pada grafik untuk mengubah target Stop Loss & Take Profit secara instan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sltp-hint-icon">
+                <polyline points="8 17 12 21 16 17"></polyline>
+                <polyline points="8 7 12 3 16 7"></polyline>
+                <line x1="12" y1="3" x2="12" y2="21"></line>
+              </svg>
+              <span>Geser Garis di Chart</span>
+            </div>
+
+            <div class="sltp-chip chip-tp" id="chip-sltp-tp" title="Garis Take Profit interaktif di chart (klik atau geser langsung di grafik)">
+              <span class="sltp-dot dot-tp"></span>
+              <span class="sltp-lbl">TP</span>
+              <span class="sltp-val" id="qt-val-tp">--.-----</span>
+            </div>
+          </div>
+
         </div>
 
         <!-- INTERACTIVE TP/SL CONTROLLER TOOLBAR (Khusus Order Manual) -->
@@ -465,6 +489,29 @@
         <div class="chart-canvas-wrapper">
           <div id="tv-chart-container"></div>
           
+          <!-- Interactive Drag Layer for TP & SL Lines -->
+          <div class="chart-drag-overlay" id="chart-drag-layer">
+            <!-- Draggable Take Profit (TP) Line -->
+            <div class="drag-price-line line-tp" id="drag-line-tp" style="display: none;">
+              <div class="drag-line-track"></div>
+              <div class="drag-handle-pill" id="handle-tp" title="Tahan & geser untuk mengubah Take Profit (TP)">
+                <span class="drag-handle-grip">⠿</span>
+                <span class="drag-handle-badge badge-tp">TP</span>
+                <span class="drag-handle-price" id="drag-price-tp">--.-----</span>
+              </div>
+            </div>
+
+            <!-- Draggable Stop Loss (SL) Line -->
+            <div class="drag-price-line line-sl" id="drag-line-sl" style="display: none;">
+              <div class="drag-line-track"></div>
+              <div class="drag-handle-pill" id="handle-sl" title="Tahan & geser untuk mengubah Stop Loss (SL)">
+                <span class="drag-handle-grip">⠿</span>
+                <span class="drag-handle-badge badge-sl">SL</span>
+                <span class="drag-handle-price" id="drag-price-sl">--.-----</span>
+              </div>
+            </div>
+          </div>
+          
           <!-- Legend Overlays -->
           <div class="chart-legend-overlay">
             <div class="chart-ohlc-values" id="chart-ohlc-legend">
@@ -478,6 +525,15 @@
               <span class="tag-ob-bull"><span class="dot-ob-bull"></span>Bullish OB</span>
               <span class="tag-ob-bear"><span class="dot-ob-bear"></span>Bearish OB</span>
               <span class="tag-sl"><span class="dot-sl"></span>Hard SL</span>
+              <button type="button" id="btn-toggle-drag-lines" class="btn-micro-vol" title="Sembunyikan / Tampilkan garis geser interaktif TP & SL di chart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
+                  <line x1="4" y1="8" x2="20" y2="8"></line>
+                  <line x1="4" y1="16" x2="20" y2="16"></line>
+                  <circle cx="8" cy="8" r="2" fill="currentColor"></circle>
+                  <circle cx="16" cy="16" r="2" fill="currentColor"></circle>
+                </svg>
+                <span id="drag-toggle-label">Garis TP/SL: ON</span>
+              </button>
               <button type="button" id="btn-toggle-vol" class="btn-micro-vol">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-svg-icon">
                   <line x1="18" y1="20" x2="18" y2="10"></line>

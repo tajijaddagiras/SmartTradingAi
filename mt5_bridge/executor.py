@@ -233,6 +233,49 @@ class OrderExecutor:
         logger.info(f"🎯 [SL/TP Updated] Position #{ticket} | SL: {pos.sl:.{digits}f} -> {target_sl:.{digits}f} | TP: {pos.tp:.{digits}f} -> {target_tp:.{digits}f}")
         return True
 
+    def modify_position(self, ticket: int, sl: Optional[float] = None, tp: Optional[float] = None) -> bool:
+        """
+        Modifies both Stop Loss and/or Take Profit for an open position on MT5.
+        """
+        if not self.connector.ensure_connected():
+            return False
+
+        position = mt5.positions_get(ticket=ticket)
+        if not position:
+            logger.warning(f"Cannot modify position #{ticket}: Position not found or already closed.")
+            return False
+
+        pos = position[0]
+        sym_info = mt5.symbol_info(pos.symbol)
+        digits = sym_info.digits if sym_info else 5
+
+        new_sl = round(float(sl), digits) if sl is not None and float(sl) > 0 else pos.sl
+        new_tp = round(float(tp), digits) if tp is not None and float(tp) > 0 else pos.tp
+
+        # Skip if no changes
+        if abs(pos.sl - new_sl) < 1e-5 and abs(pos.tp - new_tp) < 1e-5:
+            return True
+
+        request = {
+            "action": mt5.TRADE_ACTION_SLTP,
+            "position": ticket,
+            "symbol": pos.symbol,
+            "sl": new_sl,
+            "tp": new_tp,
+        }
+
+        result = mt5.order_send(request)
+        if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
+            retcode = result.retcode if result else "None"
+            comment = result.comment if result else "No response"
+            self.last_error_message = f"Gagal update SL/TP posisi #{ticket}: {comment} (Code {retcode})"
+            logger.warning(f"Failed to modify position #{ticket}: Code {retcode} - {comment}")
+            return False
+
+        logger.info(f"Position #{ticket} modified: SL {pos.sl:.{digits}f} -> {new_sl:.{digits}f} | TP {pos.tp:.{digits}f} -> {new_tp:.{digits}f}")
+        return True
+
+
     def close_position(self, ticket: int, reason: str = "Standard Close") -> bool:
         """Closes a specific open position using market order."""
         if not self.connector.ensure_connected():

@@ -1486,6 +1486,225 @@ button {
   font-family: var(--font-mono);
 }
 
+/* Interactive SL & TP Target Strip inside Quick Trade Card */
+.qt-sltp-status-strip {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sltp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--trans-fast);
+  user-select: none;
+}
+
+.sltp-chip.chip-sl {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.sltp-chip.chip-sl:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #ef4444;
+}
+
+.sltp-chip.chip-tp {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #6ee7b7;
+}
+
+.sltp-chip.chip-tp:hover {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: #10b981;
+}
+
+.sltp-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sltp-dot.dot-sl {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+.sltp-dot.dot-tp {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.sltp-lbl {
+  font-weight: 800;
+  font-size: 0.70rem;
+  opacity: 0.85;
+}
+
+.sltp-val {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
+}
+
+.sltp-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
+.sltp-hint-icon {
+  width: 12px;
+  height: 12px;
+  animation: pulse-vertical 2s infinite ease-in-out;
+}
+
+@keyframes pulse-vertical {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* ===================================================================
+   INTERACTIVE DRAGGABLE TP & SL CHART OVERLAY
+   =================================================================== */
+.chart-drag-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  bottom: 50px;
+  pointer-events: none;
+  z-index: 20;
+  overflow: visible;
+}
+
+.drag-price-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  pointer-events: auto;
+  cursor: ns-resize;
+  user-select: none;
+  touch-action: none;
+  z-index: 25;
+}
+
+.drag-price-line .drag-line-track {
+  position: absolute;
+  left: 0;
+  right: 75px;
+  top: -1px;
+  height: 2px;
+  border-top-width: 2px;
+  border-top-style: dashed;
+  transition: border-color 0.15s ease, filter 0.15s ease;
+}
+
+.drag-price-line.line-tp .drag-line-track {
+  border-top-color: #10b981;
+}
+
+.drag-price-line.line-sl .drag-line-track {
+  border-top-color: #ef4444;
+}
+
+.drag-price-line:hover .drag-line-track,
+.drag-price-line.dragging .drag-line-track {
+  border-top-style: solid;
+  border-top-width: 2.5px;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.drag-handle-pill {
+  position: absolute;
+  right: 80px;
+  top: -14px;
+  height: 28px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  white-space: nowrap;
+}
+
+.drag-handle-pill:active,
+.drag-price-line.dragging .drag-handle-pill {
+  cursor: grabbing;
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9);
+}
+
+.drag-price-line.line-tp .drag-handle-pill {
+  background: #042f22;
+  border: 1px solid #10b981;
+  color: #34d399;
+}
+
+.drag-price-line.line-sl .drag-handle-pill {
+  background: #2d0607;
+  border: 1px solid #ef4444;
+  color: #f87171;
+}
+
+.drag-handle-grip {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.drag-handle-badge {
+  font-weight: 800;
+  font-size: 0.65rem;
+  padding: 2px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.badge-tp {
+  background: rgba(16, 185, 129, 0.3);
+  color: #a7f3d0;
+}
+
+.badge-sl {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fecaca;
+}
+
+.drag-handle-price {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+
 /* ===================================================================
    VIEW 3: TRADE (MT5 Open Positions & Floating P&L)
    =================================================================== */
