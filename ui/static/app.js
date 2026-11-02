@@ -631,6 +631,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.current_tick) {
           updateQuickTradeBar(data.current_tick);
         }
+
+        // Re-apply user manual interactive TP/SL lines on chart refresh
+        if (typeof updateInteractiveLines === "function") {
+          updateInteractiveLines();
+        }
       }
     } catch (e) {
       console.error("fetchChartData error", e);

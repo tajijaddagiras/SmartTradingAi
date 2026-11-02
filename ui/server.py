@@ -663,6 +663,18 @@ async def get_logs():
     }
 
 
+@app.post("/api/system/git-pull")
+async def system_git_pull():
+    """Triggers git pull on the host machine so updates deploy automatically without manual terminal input."""
+    import subprocess
+    root_dir = Path(__file__).resolve().parent.parent
+    try:
+        res = subprocess.run(["git", "pull"], cwd=str(root_dir), capture_output=True, text=True, timeout=30)
+        return {"success": res.returncode == 0, "output": res.stdout.strip(), "error": res.stderr.strip()}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def start_ui_server(host: str = "0.0.0.0", port: int = 8899):
     """Runs the FastAPI server using Uvicorn."""
     import uvicorn
