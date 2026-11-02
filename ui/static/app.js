@@ -197,6 +197,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const dragToggleLabel = document.getElementById("drag-toggle-label");
   const chipSltpSL = document.getElementById("chip-sltp-sl");
   const chipSltpTP = document.getElementById("chip-sltp-tp");
+  const qtTpInput = document.getElementById("qt-tp-input");
+  const qtSlInput = document.getElementById("qt-sl-input");
+  const btnToggleTp = document.getElementById("btn-toggle-tp");
+  const btnToggleSl = document.getElementById("btn-toggle-sl");
+  const btnResetSltp = document.getElementById("btn-reset-sltp");
 
   let botIsRunning = false;
   let currentMinScore = 3;
@@ -285,6 +290,57 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
+  // CHART TIMESCALE RANGE PERSISTENCE (MetaTrader-Style Zoom & Pan Retention)
+  // =========================================================================
+  const chartRangeCache = {};
+
+  function getChartRangeKey(sym, tf) {
+    const s = sym || selectedSymbol || "EURUSD";
+    const t = tf || selectedTimeframe || "M15";
+    return `nexus_range_${s}_${t}`;
+  }
+
+  function saveCurrentChartLogicalRange(range) {
+    if (!range || range.from == null || range.to == null) return;
+    if (range.to - range.from < 2) return;
+    const key = getChartRangeKey(selectedSymbol, selectedTimeframe);
+    chartRangeCache[key] = { from: range.from, to: range.to };
+    try {
+      sessionStorage.setItem(key, JSON.stringify(chartRangeCache[key]));
+    } catch (e) {}
+  }
+
+  function getSavedLogicalRange(sym, tf) {
+    const key = getChartRangeKey(sym, tf);
+    if (chartRangeCache[key]) return chartRangeCache[key];
+    try {
+      const stored = sessionStorage.getItem(key);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.from != null && parsed.to != null) {
+          chartRangeCache[key] = parsed;
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function restoreChartLogicalRange() {
+    if (!chart) return false;
+    const saved = getSavedLogicalRange(selectedSymbol, selectedTimeframe);
+    if (saved && saved.from != null && saved.to != null) {
+      try {
+        chart.timeScale().setVisibleLogicalRange(saved);
+        return true;
+      } catch (e) {
+        console.warn("Could not set visible logical range", e);
+      }
+    }
+    return false;
+  }
+
+  // =========================================================================
   // SPA VIEW SWITCHER (HOME, CHART, TRADE, HISTORY, SETTINGS)
   // =========================================================================
   function switchView(viewName) {
@@ -319,7 +375,12 @@ document.addEventListener("DOMContentLoaded", () => {
           const w = chartContainer.clientWidth || 1100;
           const h = getResponsiveChartHeight();
           chart.applyOptions({ width: w, height: h });
-          chart.timeScale().fitContent();
+          // Restoring user's zoom/pan position instead of forcefully resetting
+          const restored = restoreChartLogicalRange();
+          if (!restored) {
+            chart.timeScale().fitContent();
+          }
+          setTimeout(updateInteractiveLinesPosition, 50);
         }, 80);
       }
       fetchChartData();
@@ -415,6 +476,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (qtValTP) {
       qtValTP.textContent = (interactiveTP && interactiveTP > 0) ? interactiveTP.toFixed(precision) : "--.-----";
+    }
+    if (qtTpInput && document.activeElement !== qtTpInput) {
+      qtTpInput.value = (interactiveTP && interactiveTP > 0) ? interactiveTP.toFixed(precision) : "";
+    }
+    if (qtSlInput && document.activeElement !== qtSlInput) {
+      qtSlInput.value = (interactiveSL && interactiveSL > 0) ? interactiveSL.toFixed(precision) : "";
     }
   }
 
@@ -531,6 +598,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (dragLineTP) dragLineTP.style.top = `${clampedY}px`;
         if (dragPriceTP) dragPriceTP.textContent = interactiveTP.toFixed(precision);
         if (qtValTP) qtValTP.textContent = interactiveTP.toFixed(precision);
+        if (qtTpInput && document.activeElement !== qtTpInput) {
+          qtTpInput.value = interactiveTP.toFixed(precision);
+        }
       }
     }
 
@@ -580,6 +650,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (dragLineSL) dragLineSL.style.top = `${clampedY}px`;
         if (dragPriceSL) dragPriceSL.textContent = interactiveSL.toFixed(precision);
         if (qtValSL) qtValSL.textContent = interactiveSL.toFixed(precision);
+        if (qtSlInput && document.activeElement !== qtSlInput) {
+          qtSlInput.value = interactiveSL.toFixed(precision);
+        }
       }
     }
 
@@ -771,8 +844,11 @@ document.addEventListener("DOMContentLoaded", () => {
     chart.timeScale().subscribeVisibleTimeRangeChange(() => {
       updateInteractiveLinesPosition();
     });
-    chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+    chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
       updateInteractiveLinesPosition();
+      if (range) {
+        saveCurrentChartLogicalRange(range);
+      }
     });
 
     setupDraggableLines();
@@ -814,7 +890,21 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         }
 
+        // Save current visible logical range before updating series data to preserve user zoom/pan
+        let prevRange = chart.timeScale().getVisibleLogicalRange();
+        if (!prevRange || prevRange.from == null) {
+          prevRange = getSavedLogicalRange(selectedSymbol, selectedTimeframe);
+        }
+
         candlestickSeries.setData(data.candles);
+
+        if (prevRange && prevRange.from != null && prevRange.to != null) {
+          try {
+            chart.timeScale().setVisibleLogicalRange(prevRange);
+          } catch (e) {}
+        } else {
+          chart.timeScale().fitContent();
+        }
 
         const lastBar = data.candles[data.candles.length - 1];
         if (legOpen) legOpen.textContent = lastBar.open.toFixed(precision);
@@ -975,8 +1065,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       await quickSyncTrading({ symbols: activeSymbols });
       fetchLiveTick();
-      fetchChartData();
-      if (chart) chart.timeScale().fitContent();
+      await fetchChartData();
+      const restoredSym = restoreChartLogicalRange();
+      if (!restoredSym && chart) chart.timeScale().fitContent();
     });
   }
 
@@ -993,8 +1084,9 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast(`Timeframe bot disinkronkan ke: ${selectedTimeframe}`, "info");
 
       await quickSyncTrading({ timeframe: selectedTimeframe });
-      fetchChartData();
-      if (chart) chart.timeScale().fitContent();
+      await fetchChartData();
+      const restoredTf = restoreChartLogicalRange();
+      if (!restoredTf && chart) chart.timeScale().fitContent();
     });
   }
 
@@ -1100,98 +1192,69 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Interactive TP & SL Line Controller
-  const btnToggleTp = document.getElementById("btn-toggle-tp");
-  const btnToggleSl = document.getElementById("btn-toggle-sl");
-  const btnResetSltp = document.getElementById("btn-reset-sltp");
-  const qtTpInput = document.getElementById("qt-tp-input");
-  const qtSlInput = document.getElementById("qt-sl-input");
-
-  let interactiveTpLine = null;
-  let interactiveSlLine = null;
-
-  function updateInteractiveLines() {
-    if (!candlestickSeries) return;
-
-    // Update TP line
-    const tpVal = parseFloat(qtTpInput ? qtTpInput.value : 0);
-    if (interactiveTpLine) {
-      candlestickSeries.removePriceLine(interactiveTpLine);
-      interactiveTpLine = null;
-    }
-    if (tpVal && tpVal > 0) {
-      interactiveTpLine = candlestickSeries.createPriceLine({
-        price: tpVal,
-        color: "#22c55e",
-        lineWidth: 2,
-        lineStyle: 2,
-        axisLabelVisible: true,
-        title: "SET TP (MANUAL)",
-      });
-    }
-
-    // Update SL line
-    const slVal = parseFloat(qtSlInput ? qtSlInput.value : 0);
-    if (interactiveSlLine) {
-      candlestickSeries.removePriceLine(interactiveSlLine);
-      interactiveSlLine = null;
-    }
-    if (slVal && slVal > 0) {
-      interactiveSlLine = candlestickSeries.createPriceLine({
-        price: slVal,
-        color: "#ef4444",
-        lineWidth: 2,
-        lineStyle: 2,
-        axisLabelVisible: true,
-        title: "SET SL (MANUAL)",
-      });
-    }
+  // =========================================================================
+  // INTERACTIVE TP & SL CONTROLLER TOOLBAR (Direct Two-Way Chart Sync)
+  // =========================================================================
+  if (qtTpInput) {
+    qtTpInput.addEventListener("input", () => {
+      const val = parseFloat(qtTpInput.value);
+      interactiveTP = (!isNaN(val) && val > 0) ? val : null;
+      interactiveLinesEnabled = true;
+      updateInteractiveLinesPosition();
+      updateQtSltpStrip();
+    });
   }
 
-  if (qtTpInput) qtTpInput.addEventListener("input", updateInteractiveLines);
-  if (qtSlInput) qtSlInput.addEventListener("input", updateInteractiveLines);
+  if (qtSlInput) {
+    qtSlInput.addEventListener("input", () => {
+      const val = parseFloat(qtSlInput.value);
+      interactiveSL = (!isNaN(val) && val > 0) ? val : null;
+      interactiveLinesEnabled = true;
+      updateInteractiveLinesPosition();
+      updateQtSltpStrip();
+    });
+  }
 
   if (btnToggleTp) {
     btnToggleTp.addEventListener("click", () => {
-      if (!qtTpInput) return;
       const curBid = parseFloat(qtBidPrice ? qtBidPrice.textContent : 0) || 1.0850;
-      if (!qtTpInput.value || parseFloat(qtTpInput.value) <= 0) {
-        // Default suggest 30 pips above current bid
+      const { precision } = getSymbolPrecision(selectedSymbol);
+      if (!interactiveTP || interactiveTP <= 0) {
         const offset = selectedSymbol && (selectedSymbol.includes("XAU") || selectedSymbol.includes("JPY")) ? 2.5 : 0.0030;
-        qtTpInput.value = (curBid + offset).toFixed(selectedSymbol && selectedSymbol.includes("JPY") ? 3 : 5);
+        interactiveTP = Number((curBid + offset).toFixed(precision));
       }
-      updateInteractiveLines();
-      showToast("Garis TP aktif di chart. Silakan sesuaikan angka level target.", "info");
+      interactiveLinesEnabled = true;
+      updateQtSltpStrip();
+      updateInteractiveLinesPosition();
+      showToast(`Garis Take Profit (TP) aktif: ${interactiveTP}. Bisa digeser langsung di chart.`, "info");
     });
   }
 
   if (btnToggleSl) {
     btnToggleSl.addEventListener("click", () => {
-      if (!qtSlInput) return;
       const curBid = parseFloat(qtBidPrice ? qtBidPrice.textContent : 0) || 1.0850;
-      if (!qtSlInput.value || parseFloat(qtSlInput.value) <= 0) {
-        // Default suggest 20 pips below current bid
+      const { precision } = getSymbolPrecision(selectedSymbol);
+      if (!interactiveSL || interactiveSL <= 0) {
         const offset = selectedSymbol && (selectedSymbol.includes("XAU") || selectedSymbol.includes("JPY")) ? 1.5 : 0.0020;
-        qtSlInput.value = (curBid - offset).toFixed(selectedSymbol && selectedSymbol.includes("JPY") ? 3 : 5);
+        interactiveSL = Number((curBid - offset).toFixed(precision));
       }
-      updateInteractiveLines();
-      showToast("Garis SL aktif di chart. Silakan sesuaikan angka batas risiko.", "info");
+      interactiveLinesEnabled = true;
+      updateQtSltpStrip();
+      updateInteractiveLinesPosition();
+      showToast(`Garis Stop Loss (SL) aktif: ${interactiveSL}. Bisa digeser langsung di chart.`, "info");
     });
   }
 
   if (btnResetSltp) {
     btnResetSltp.addEventListener("click", () => {
+      interactiveTP = null;
+      interactiveSL = null;
       if (qtTpInput) qtTpInput.value = "";
       if (qtSlInput) qtSlInput.value = "";
-      if (interactiveTpLine && candlestickSeries) {
-        candlestickSeries.removePriceLine(interactiveTpLine);
-        interactiveTpLine = null;
-      }
-      if (interactiveSlLine && candlestickSeries) {
-        candlestickSeries.removePriceLine(interactiveSlLine);
-        interactiveSlLine = null;
-      }
-      showToast("Level TP/SL dikembalikan ke kalkulasi otomatis AI.", "info");
+      if (dragLineTP) dragLineTP.style.display = "none";
+      if (dragLineSL) dragLineSL.style.display = "none";
+      updateQtSltpStrip();
+      showToast("Garis TP/SL manual dibersihkan. Order akan menggunakan kalkulasi otomatis AI.", "info");
     });
   }
 
@@ -1516,8 +1579,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span>•</span>
                 <span>TP: ${p.tp > 0 ? formatPrice(p.tp, p.symbol) : "NONE"}</span>
                 <span>•</span>
-                <button type="button" class="btn-modify-pos-sltp" data-ticket="${p.ticket}" data-symbol="${p.symbol}" data-sl="${p.sl || ''}" data-tp="${p.tp || ''}" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; margin-left: 4px;">
-                  ✏️ Edit SL/TP
+                <button type="button" class="btn-modify-pos-sltp" data-ticket="${p.ticket}" data-symbol="${p.symbol}" data-sl="${p.sl || ''}" data-tp="${p.tp || ''}" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #38bdf8; padding: 2px 7px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; margin-left: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                  <span>Ubah SL/TP</span>
                 </button>
               </div>
             </div>
@@ -2031,8 +2095,9 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast(`Aset aktif disinkronkan ke: ${sym}`, "info");
         await quickSyncTrading({ symbols: [sym] });
         fetchLiveTick();
-        fetchChartData();
-        if (chart) chart.timeScale().fitContent();
+        await fetchChartData();
+        const restored = restoreChartLogicalRange();
+        if (!restored && chart) chart.timeScale().fitContent();
 
         // If clicked on mobile, smoothly switch to chart execution view
         if (window.innerWidth <= 768) {

@@ -459,30 +459,54 @@
 
         </div>
 
-        <!-- INTERACTIVE TP/SL CONTROLLER TOOLBAR (Khusus Order Manual) -->
-        <div class="interactive-sltp-toolbar" id="sltp-toolbar" style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; margin: 8px 0; padding: 6px 14px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
-          <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Manual Order:</span>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <button type="button" id="btn-toggle-tp" class="btn-sltp-toggle" style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #22c55e; padding: 4px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
-              <span>🎯 Garis TP</span>
-            </button>
-            <input type="number" step="0.00001" id="qt-tp-input" placeholder="Harga TP..." title="Atur Garis/Harga Take Profit Manual" style="width: 110px; background: rgba(0,0,0,0.5); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-family: monospace;">
+        <!-- INTERACTIVE TP/SL CONTROLLER TOOLBAR (Institutional MT5 Styling) -->
+        <div class="sltp-control-toolbar" id="sltp-toolbar">
+          <div class="sltp-toolbar-left">
+            <span class="sltp-toolbar-label">Target &amp; Risiko</span>
           </div>
 
-          <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.1);"></div>
+          <div class="sltp-toolbar-items">
+            <!-- TP Control Group -->
+            <div class="sltp-item-group">
+              <button type="button" id="btn-toggle-tp" class="btn-sltp-ctrl btn-sltp-tp" title="Fokus atau aktifkan garis Take Profit di chart">
+                <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" class="sltp-icon-svg" aria-hidden="true">
+                  <circle cx="8" cy="8" r="6"></circle>
+                  <circle cx="8" cy="8" r="2"></circle>
+                  <line x1="8" y1="1" x2="8" y2="4"></line>
+                  <line x1="8" y1="12" x2="8" y2="15"></line>
+                  <line x1="1" y1="8" x2="4" y2="8"></line>
+                  <line x1="12" y1="8" x2="15" y2="8"></line>
+                </svg>
+                <span>Garis TP</span>
+              </button>
+              <input type="number" step="0.00001" id="qt-tp-input" class="sltp-num-input input-tp" placeholder="Harga TP..." title="Atur Garis/Harga Take Profit">
+            </div>
 
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <button type="button" id="btn-toggle-sl" class="btn-sltp-toggle" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; padding: 4px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
-              <span>🛑 Garis SL</span>
+            <div class="sltp-toolbar-divider" aria-hidden="true"></div>
+
+            <!-- SL Control Group -->
+            <div class="sltp-item-group">
+              <button type="button" id="btn-toggle-sl" class="btn-sltp-ctrl btn-sltp-sl" title="Fokus atau aktifkan garis Stop Loss di chart">
+                <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" class="sltp-icon-svg" aria-hidden="true">
+                  <path d="M8 1.5l5.5 2.5v4c0 3.5-2.5 6-5.5 7-3-1-5.5-3.5-5.5-7v-4L8 1.5z"></path>
+                  <line x1="5.5" y1="8" x2="10.5" y2="8"></line>
+                </svg>
+                <span>Garis SL</span>
+              </button>
+              <input type="number" step="0.00001" id="qt-sl-input" class="sltp-num-input input-sl" placeholder="Harga SL..." title="Atur Garis/Harga Stop Loss">
+            </div>
+
+            <div class="sltp-toolbar-divider" aria-hidden="true"></div>
+
+            <!-- Reset Button -->
+            <button type="button" id="btn-reset-sltp" class="btn-sltp-ctrl btn-sltp-reset" title="Bersihkan garis TP/SL manual dari chart">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" class="sltp-icon-svg" aria-hidden="true">
+                <path d="M2.5 8a5.5 5.5 0 1 0 1.2-3.4"></path>
+                <polyline points="2 2 2.5 5 5.5 4.5"></polyline>
+              </svg>
+              <span>Reset Garis</span>
             </button>
-            <input type="number" step="0.00001" id="qt-sl-input" placeholder="Harga SL..." title="Atur Garis/Harga Stop Loss Manual" style="width: 110px; background: rgba(0,0,0,0.5); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-family: monospace;">
           </div>
-
-          <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.1);"></div>
-
-          <button type="button" id="btn-reset-sltp" title="Bersihkan garis TP/SL manual dari chart" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #94a3b8; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
-            ↺ Hapus Garis
-          </button>
         </div>
 
         <!-- TradingView Lightweight Chart Canvas Container -->
@@ -494,8 +518,15 @@
             <!-- Draggable Take Profit (TP) Line -->
             <div class="drag-price-line line-tp" id="drag-line-tp" style="display: none;">
               <div class="drag-line-track"></div>
-              <div class="drag-handle-pill" id="handle-tp" title="Tahan & geser untuk mengubah Take Profit (TP)">
-                <span class="drag-handle-grip">⠿</span>
+              <div class="drag-handle-pill" id="handle-tp" title="Tahan &amp; geser untuk mengubah Take Profit (TP)">
+                <svg viewBox="0 0 12 12" width="10" height="10" fill="currentColor" class="drag-handle-svg" aria-hidden="true">
+                  <circle cx="3.5" cy="3" r="1.2"></circle>
+                  <circle cx="8.5" cy="3" r="1.2"></circle>
+                  <circle cx="3.5" cy="6" r="1.2"></circle>
+                  <circle cx="8.5" cy="6" r="1.2"></circle>
+                  <circle cx="3.5" cy="9" r="1.2"></circle>
+                  <circle cx="8.5" cy="9" r="1.2"></circle>
+                </svg>
                 <span class="drag-handle-badge badge-tp">TP</span>
                 <span class="drag-handle-price" id="drag-price-tp">--.-----</span>
               </div>
@@ -504,8 +535,15 @@
             <!-- Draggable Stop Loss (SL) Line -->
             <div class="drag-price-line line-sl" id="drag-line-sl" style="display: none;">
               <div class="drag-line-track"></div>
-              <div class="drag-handle-pill" id="handle-sl" title="Tahan & geser untuk mengubah Stop Loss (SL)">
-                <span class="drag-handle-grip">⠿</span>
+              <div class="drag-handle-pill" id="handle-sl" title="Tahan &amp; geser untuk mengubah Stop Loss (SL)">
+                <svg viewBox="0 0 12 12" width="10" height="10" fill="currentColor" class="drag-handle-svg" aria-hidden="true">
+                  <circle cx="3.5" cy="3" r="1.2"></circle>
+                  <circle cx="8.5" cy="3" r="1.2"></circle>
+                  <circle cx="3.5" cy="6" r="1.2"></circle>
+                  <circle cx="8.5" cy="6" r="1.2"></circle>
+                  <circle cx="3.5" cy="9" r="1.2"></circle>
+                  <circle cx="8.5" cy="9" r="1.2"></circle>
+                </svg>
                 <span class="drag-handle-badge badge-sl">SL</span>
                 <span class="drag-handle-price" id="drag-price-sl">--.-----</span>
               </div>
