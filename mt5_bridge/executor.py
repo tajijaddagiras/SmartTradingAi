@@ -185,39 +185,49 @@ class OrderExecutor:
         Modifies the Stop Loss of an open position on the MT5 broker server.
         Used by Smart Trailing Stop engine.
         """
+        return self.modify_sltp(ticket=ticket, sl=new_sl)
+
+    def modify_sltp(self, ticket: int, sl: Optional[float] = None, tp: Optional[float] = None) -> bool:
+        """
+        Modifies Stop Loss and/or Take Profit for an open position on the MT5 server.
+        Synchronizes live drag-and-drop or manual adjustments from the chart UI.
+        """
         if not self.connector.ensure_connected():
             return False
 
         position = mt5.positions_get(ticket=ticket)
         if not position:
-            logger.warning(f"Cannot modify SL: Position #{ticket} not found or already closed.")
+            logger.warning(f"Cannot modify SL/TP: Position #{ticket} not found or already closed.")
             return False
 
         pos = position[0]
         sym_info = mt5.symbol_info(pos.symbol)
         digits = sym_info.digits if sym_info else 5
-        new_sl_rounded = round(new_sl, digits)
 
-        # Skip modification if negligible difference
-        if abs(pos.sl - new_sl_rounded) < (sym_info.point if sym_info else 0.00001):
+        target_sl = round(float(sl), digits) if sl is not None and sl > 0 else float(pos.sl)
+        target_tp = round(float(tp), digits) if tp is not None and tp > 0 else float(pos.tp)
+
+        # Skip if no significant change
+        point = sym_info.point if sym_info else 0.00001
+        if abs(pos.sl - target_sl) < point and abs(pos.tp - target_tp) < point:
             return True
 
         request = {
             "action": mt5.TRADE_ACTION_SLTP,
             "position": ticket,
             "symbol": pos.symbol,
-            "sl": new_sl_rounded,
-            "tp": pos.tp,
+            "sl": target_sl,
+            "tp": target_tp,
         }
 
         result = mt5.order_send(request)
         if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
             retcode = result.retcode if result else "None"
             comment = result.comment if result else "No response"
-            logger.warning(f"Failed to modify SL for position #{ticket}: Code {retcode} - {comment}")
+            logger.warning(f"Failed to modify SL/TP for position #{ticket}: Code {retcode} - {comment}")
             return False
 
-        logger.info(f"[Smart Trailing] Position #{ticket} SL updated: {pos.sl:.{digits}f} -> {new_sl_rounded:.{digits}f}")
+        logger.info(f"🎯 [SL/TP Updated] Position #{ticket} | SL: {pos.sl:.{digits}f} -> {target_sl:.{digits}f} | TP: {pos.tp:.{digits}f} -> {target_tp:.{digits}f}")
         return True
 
     def close_position(self, ticket: int, reason: str = "Standard Close") -> bool:

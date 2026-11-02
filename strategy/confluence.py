@@ -30,6 +30,8 @@ class TradeSignal:
     ema_trend_aligned: bool
     structure_aligned: bool = False
     smc_aligned: bool = False
+    tp: Optional[float] = None
+    mtf_info: Optional[Dict[str, Any]] = None
 
 
 class ConfluenceEngine:
@@ -139,13 +141,22 @@ class ConfluenceEngine:
             ref_low = active_bullish_ob["bottom"] if active_bullish_ob else (structure["support_level"] or current_price)
             hard_sl = ref_low - (cfg.atr_multiplier_sl * atr_val)
 
+            # Calculate Server-Side Take Profit (TP)
+            sl_distance = abs(current_price - hard_sl)
+            res_target = structure.get("resistance_level")
+            if res_target and (res_target - current_price) >= (1.5 * sl_distance):
+                take_profit = res_target
+            else:
+                take_profit = current_price + (2.0 * sl_distance)
+
             rationale = " | ".join(buy_reasons)
-            logger.info(f"🎯 [BUY CONFLUENCE CONFIRMED] {symbol} @ {current_price:.5f} | SL: {hard_sl:.5f} | {rationale}")
+            logger.info(f"🎯 [BUY CONFLUENCE CONFIRMED] {symbol} @ {current_price:.5f} | SL: {hard_sl:.5f} | TP: {take_profit:.5f} | {rationale}")
             return TradeSignal(
                 action="BUY",
                 symbol=symbol,
                 price=current_price,
                 sl=hard_sl,
+                tp=take_profit,
                 confluence_score=buy_score,
                 rationale=rationale,
                 structure_bias=bias,
@@ -161,13 +172,22 @@ class ConfluenceEngine:
             ref_high = active_bearish_ob["top"] if active_bearish_ob else (structure["resistance_level"] or current_price)
             hard_sl = ref_high + (cfg.atr_multiplier_sl * atr_val)
 
+            # Calculate Server-Side Take Profit (TP)
+            sl_distance = abs(hard_sl - current_price)
+            sup_target = structure.get("support_level")
+            if sup_target and (current_price - sup_target) >= (1.5 * sl_distance):
+                take_profit = sup_target
+            else:
+                take_profit = current_price - (2.0 * sl_distance)
+
             rationale = " | ".join(sell_reasons)
-            logger.info(f"🎯 [SELL CONFLUENCE CONFIRMED] {symbol} @ {current_price:.5f} | SL: {hard_sl:.5f} | {rationale}")
+            logger.info(f"🎯 [SELL CONFLUENCE CONFIRMED] {symbol} @ {current_price:.5f} | SL: {hard_sl:.5f} | TP: {take_profit:.5f} | {rationale}")
             return TradeSignal(
                 action="SELL",
                 symbol=symbol,
                 price=current_price,
                 sl=hard_sl,
+                tp=take_profit,
                 confluence_score=sell_score,
                 rationale=rationale,
                 structure_bias=bias,
@@ -197,6 +217,7 @@ class ConfluenceEngine:
             symbol=symbol,
             price=current_price,
             sl=0.0,
+            tp=0.0,
             confluence_score=best_score,
             rationale=f"Confluence incomplete (Buy: {buy_score}/3, Sell: {sell_score}/3)",
             structure_bias=bias,
@@ -206,6 +227,113 @@ class ConfluenceEngine:
             structure_aligned=struct_ok,
             smc_aligned=smc_ok,
         )
+
+    @staticmethod
+    def detect_candlestick_pattern(df: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Analyzes the last 2-3 candles for institutional price action patterns:
+        - Bullish/Bearish Pin Bar (Rejection Wick)
+        - Bullish/Bearish Engulfing
+        """
+        if len(df) < 3:
+            return {"pattern": "NONE", "bias": "NEUTRAL", "rejection": False}
+
+        curr = df.iloc[-1]
+        prev = df.iloc[-2]
+
+        c_open, c_high, c_low, c_close = float(curr["open"]), float(curr["high"]), float(curr["low"]), float(curr["close"])
+        p_open, p_close = float(prev["open"]), float(prev["close"])
+
+        total_range = c_high - c_low
+        if total_range <= 0:
+            return {"pattern": "NONE", "bias": "NEUTRAL", "rejection": False}
+
+        body = abs(c_close - c_open)
+        upper_wick = c_high - max(c_close, c_open)
+        lower_wick = min(c_close, c_open) - c_low
+
+        # 1. Bullish Pin Bar / Hammer (Long lower wick rejection at support)
+        if lower_wick >= 1.8 * body and upper_wick <= 0.4 * body:
+            return {"pattern": "BULLISH_PIN_BAR", "bias": "BULLISH", "rejection": True, "detail": "Strong Lower Wick Rejection"}
+
+        # 2. Bearish Pin Bar / Shooting Star (Long upper wick rejection at resistance)
+        if upper_wick >= 1.8 * body and lower_wick <= 0.4 * body:
+            return {"pattern": "BEARISH_PIN_BAR", "bias": "BEARISH", "rejection": True, "detail": "Strong Upper Wick Rejection"}
+
+        # 3. Bullish Engulfing (Current green body engulfs previous red body)
+        if c_close > c_open and p_close < p_open and c_close > p_open and c_open < p_close:
+            return {"pattern": "BULLISH_ENGULFING", "bias": "BULLISH", "rejection": False, "detail": "Full Bullish Engulfing"}
+
+        # 4. Bearish Engulfing (Current red body engulfs previous green body)
+        if c_close < c_open and p_close > p_open and c_close < p_open and c_open > p_close:
+            return {"pattern": "BEARISH_ENGULFING", "bias": "BEARISH", "rejection": False, "detail": "Full Bearish Engulfing"}
+
+        return {"pattern": "NORMAL_CANDLE", "bias": "NEUTRAL", "rejection": False}
+
+    def evaluate_multi_timeframe(self, symbol: str) -> TradeSignal:
+        """
+        Performs Deep Multi-Timeframe Analysis across H4 (Macro), H1 (Structure), and M15/M5 (Trigger).
+        Ensures the bot does not trade counter-trend against the macro trend.
+        """
+        from mt5_bridge.market_data import market_data_provider
+
+        # 1. Fetch H4 (Macro Trend)
+        h4_df = market_data_provider.get_candles(symbol, timeframe="H4", count=100)
+        # 2. Fetch H1 (Structure)
+        h1_df = market_data_provider.get_candles(symbol, timeframe="H1", count=150)
+        # 3. Fetch M15 (Micro Entry & Candle Confirmation)
+        m15_df = market_data_provider.get_candles(symbol, timeframe="M15", count=150)
+
+        if h1_df.empty or len(h1_df) < 50:
+            return TradeSignal(
+                action="HOLD", symbol=symbol, price=0.0, sl=0.0, tp=0.0, confluence_score=0,
+                rationale="Insufficient MTF data from broker.", structure_bias="UNKNOWN",
+                has_ob=False, has_volume_anomaly=False, ema_trend_aligned=False
+            )
+
+        # Baseline single evaluation on primary H1
+        base_signal = self.evaluate(symbol, h1_df)
+
+        mtf_info: Dict[str, Any] = {
+            "h4_bias": "NEUTRAL",
+            "h1_bias": base_signal.structure_bias,
+            "m15_pattern": "NONE",
+            "mtf_aligned": False
+        }
+
+        # Check H4 Macro
+        if not h4_df.empty and len(h4_df) >= 50:
+            h4_ind = indicators.append_all_indicators(h4_df, ema_period=50)
+            last_h4 = h4_ind.iloc[-1]
+            h4_close = float(last_h4["close"])
+            h4_ema = float(last_h4["ema_trend"])
+            h4_bias = "BULLISH" if h4_close > h4_ema else "BEARISH"
+            mtf_info["h4_bias"] = h4_bias
+
+            # If base signal conflicts with H4 macro trend -> Downgrade signal to protect capital!
+            if base_signal.action == "BUY" and h4_bias == "BEARISH":
+                base_signal.action = "HOLD"
+                base_signal.confluence_score = max(0, base_signal.confluence_score - 1)
+                base_signal.rationale += " [MTF GUARD: Blocked by H4 Macro Downtrend]"
+            elif base_signal.action == "SELL" and h4_bias == "BULLISH":
+                base_signal.action = "HOLD"
+                base_signal.confluence_score = max(0, base_signal.confluence_score - 1)
+                base_signal.rationale += " [MTF GUARD: Blocked by H4 Macro Uptrend]"
+
+        # Check M15 Micro Candlestick Trigger
+        if not m15_df.empty:
+            m15_pat = self.detect_candlestick_pattern(m15_df)
+            mtf_info["m15_pattern"] = m15_pat["pattern"]
+            if m15_pat["rejection"]:
+                base_signal.rationale += f" | M15 Candle: {m15_pat['pattern']} ({m15_pat['detail']})"
+
+        # Check if fully aligned
+        if base_signal.action in ("BUY", "SELL") and mtf_info["h4_bias"] == ( "BULLISH" if base_signal.action == "BUY" else "BEARISH"):
+            mtf_info["mtf_aligned"] = True
+            base_signal.rationale = f"⭐ [MTF ALIGNED 4H+1H+15M] {base_signal.rationale}"
+
+        base_signal.mtf_info = mtf_info
+        return base_signal
 
 
 confluence_engine = ConfluenceEngine()

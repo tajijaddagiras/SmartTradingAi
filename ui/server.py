@@ -450,6 +450,24 @@ class ManualOrderPayload(BaseModel):
     symbol: str
     action: str
     lot: float = 0.01
+    sl: Optional[float] = None
+    tp: Optional[float] = None
+
+
+class ModifyPositionPayload(BaseModel):
+    sl: Optional[float] = None
+    tp: Optional[float] = None
+
+
+@app.post("/api/positions/{ticket}/modify")
+async def modify_position(ticket: int, payload: ModifyPositionPayload):
+    """
+    Modifies Stop Loss and/or Take Profit for an open position from the interactive chart UI.
+    """
+    success = order_executor.modify_sltp(ticket, sl=payload.sl, tp=payload.tp)
+    if not success:
+        raise HTTPException(status_code=400, detail=f"Gagal memodifikasi SL/TP untuk posisi #{ticket}")
+    return {"success": True, "ticket": ticket, "sl": payload.sl, "tp": payload.tp}
 
 
 @app.post("/api/trading/manual-order")
@@ -504,12 +522,18 @@ async def execute_manual_order(payload: ManualOrderPayload):
         offset = 0.0020 if digits == 5 else 2.50
         sl = (price - offset) if action == "BUY" else (price + offset)
 
+    # Override with user-defined SL/TP if provided
+    if payload.sl is not None and payload.sl > 0:
+        sl = float(payload.sl)
+    tp = float(payload.tp) if payload.tp is not None and payload.tp > 0 else None
+
     # 3. Open Order via OrderExecutor
     ticket = order_executor.open_order(
         symbol=symbol,
         action=action,
         lot=lot,
         sl=sl,
+        tp=tp,
         rationale="Manual Quick Trade"
     )
 

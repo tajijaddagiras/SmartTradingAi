@@ -613,6 +613,18 @@ document.addEventListener("DOMContentLoaded", () => {
               });
               activePriceLines.push(slLine);
             }
+
+            if (pos.tp > 0) {
+              const tpLine = candlestickSeries.createPriceLine({
+                price: pos.tp,
+                color: "#22c55e",
+                lineWidth: 2,
+                lineStyle: 0,
+                axisLabelVisible: true,
+                title: `TAKE PROFIT #${pos.ticket}`,
+              });
+              activePriceLines.push(tpLine);
+            }
           });
         }
 
@@ -813,19 +825,120 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Interactive TP & SL Line Controller
+  const btnToggleTp = document.getElementById("btn-toggle-tp");
+  const btnToggleSl = document.getElementById("btn-toggle-sl");
+  const btnResetSltp = document.getElementById("btn-reset-sltp");
+  const qtTpInput = document.getElementById("qt-tp-input");
+  const qtSlInput = document.getElementById("qt-sl-input");
+
+  let interactiveTpLine = null;
+  let interactiveSlLine = null;
+
+  function updateInteractiveLines() {
+    if (!candlestickSeries) return;
+
+    // Update TP line
+    const tpVal = parseFloat(qtTpInput ? qtTpInput.value : 0);
+    if (interactiveTpLine) {
+      candlestickSeries.removePriceLine(interactiveTpLine);
+      interactiveTpLine = null;
+    }
+    if (tpVal && tpVal > 0) {
+      interactiveTpLine = candlestickSeries.createPriceLine({
+        price: tpVal,
+        color: "#22c55e",
+        lineWidth: 2,
+        lineStyle: 2,
+        axisLabelVisible: true,
+        title: "SET TP (MANUAL)",
+      });
+    }
+
+    // Update SL line
+    const slVal = parseFloat(qtSlInput ? qtSlInput.value : 0);
+    if (interactiveSlLine) {
+      candlestickSeries.removePriceLine(interactiveSlLine);
+      interactiveSlLine = null;
+    }
+    if (slVal && slVal > 0) {
+      interactiveSlLine = candlestickSeries.createPriceLine({
+        price: slVal,
+        color: "#ef4444",
+        lineWidth: 2,
+        lineStyle: 2,
+        axisLabelVisible: true,
+        title: "SET SL (MANUAL)",
+      });
+    }
+  }
+
+  if (qtTpInput) qtTpInput.addEventListener("input", updateInteractiveLines);
+  if (qtSlInput) qtSlInput.addEventListener("input", updateInteractiveLines);
+
+  if (btnToggleTp) {
+    btnToggleTp.addEventListener("click", () => {
+      if (!qtTpInput) return;
+      const curBid = parseFloat(qtBidPrice ? qtBidPrice.textContent : 0) || 1.0850;
+      if (!qtTpInput.value || parseFloat(qtTpInput.value) <= 0) {
+        // Default suggest 30 pips above current bid
+        const offset = selectedSymbol && (selectedSymbol.includes("XAU") || selectedSymbol.includes("JPY")) ? 2.5 : 0.0030;
+        qtTpInput.value = (curBid + offset).toFixed(selectedSymbol && selectedSymbol.includes("JPY") ? 3 : 5);
+      }
+      updateInteractiveLines();
+      showToast("Garis TP aktif di chart. Silakan sesuaikan angka level target.", "info");
+    });
+  }
+
+  if (btnToggleSl) {
+    btnToggleSl.addEventListener("click", () => {
+      if (!qtSlInput) return;
+      const curBid = parseFloat(qtBidPrice ? qtBidPrice.textContent : 0) || 1.0850;
+      if (!qtSlInput.value || parseFloat(qtSlInput.value) <= 0) {
+        // Default suggest 20 pips below current bid
+        const offset = selectedSymbol && (selectedSymbol.includes("XAU") || selectedSymbol.includes("JPY")) ? 1.5 : 0.0020;
+        qtSlInput.value = (curBid - offset).toFixed(selectedSymbol && selectedSymbol.includes("JPY") ? 3 : 5);
+      }
+      updateInteractiveLines();
+      showToast("Garis SL aktif di chart. Silakan sesuaikan angka batas risiko.", "info");
+    });
+  }
+
+  if (btnResetSltp) {
+    btnResetSltp.addEventListener("click", () => {
+      if (qtTpInput) qtTpInput.value = "";
+      if (qtSlInput) qtSlInput.value = "";
+      if (interactiveTpLine && candlestickSeries) {
+        candlestickSeries.removePriceLine(interactiveTpLine);
+        interactiveTpLine = null;
+      }
+      if (interactiveSlLine && candlestickSeries) {
+        candlestickSeries.removePriceLine(interactiveSlLine);
+        interactiveSlLine = null;
+      }
+      showToast("Level TP/SL dikembalikan ke kalkulasi otomatis AI.", "info");
+    });
+  }
+
   async function executeQuickOrder(action) {
     const lot = parseFloat(qtLotInput ? qtLotInput.value : 0.01) || 0.01;
     const sym = selectedSymbol || "EURUSD";
+    const userSl = parseFloat(qtSlInput && qtSlInput.value ? qtSlInput.value : 0) || null;
+    const userTp = parseFloat(qtTpInput && qtTpInput.value ? qtTpInput.value : 0) || null;
 
     // Visual loading state
     if (btnQuickSell) btnQuickSell.disabled = true;
     if (btnQuickBuy) btnQuickBuy.disabled = true;
 
     try {
+      const payload = { symbol: sym, action: action, lot: lot };
+      if (userSl && userSl > 0) payload.sl = userSl;
+      if (userTp && userTp > 0) payload.tp = userTp;
+
       const res = await fetch("/api/trading/manual-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ symbol: sym, action: action, lot: lot })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
 
@@ -1113,9 +1226,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span>${formatPrice(p.price_current, p.symbol)}</span>
               </div>
               <div class="mt5-pos-subinfo">
-                <span>SL: ${p.sl > 0 ? formatPrice(p.sl, p.symbol) : "HARD SL"}</span>
+                <span>SL: ${p.sl > 0 ? formatPrice(p.sl, p.symbol) : "NONE"}</span>
                 <span>•</span>
-                <span>Ticket: #${p.ticket}</span>
+                <span>TP: ${p.tp > 0 ? formatPrice(p.tp, p.symbol) : "NONE"}</span>
+                <span>•</span>
+                <button type="button" class="btn-modify-pos-sltp" data-ticket="${p.ticket}" data-symbol="${p.symbol}" data-sl="${p.sl || ''}" data-tp="${p.tp || ''}" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; margin-left: 4px;">
+                  ✏️ Edit SL/TP
+                </button>
               </div>
             </div>
 
@@ -1128,6 +1245,44 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
         })
         .join("");
+
+      // Bind Modify SL/TP buttons
+      document.querySelectorAll(".btn-modify-pos-sltp").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const ticket = btn.dataset.ticket;
+          const sym = btn.dataset.symbol;
+          const currentSl = btn.dataset.sl || "";
+          const currentTp = btn.dataset.tp || "";
+
+          const newSlStr = prompt(`[Posisi #${ticket} ${sym}] Masukkan level Stop Loss baru:`, currentSl);
+          if (newSlStr === null) return;
+
+          const newTpStr = prompt(`[Posisi #${ticket} ${sym}] Masukkan level Take Profit baru (atau kosongkan untuk tanpa TP):`, currentTp);
+          if (newTpStr === null) return;
+
+          const slVal = parseFloat(newSlStr);
+          const tpVal = newTpStr.trim() !== "" ? parseFloat(newTpStr) : null;
+
+          try {
+            const res = await fetch(`/api/positions/${ticket}/modify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sl: slVal, tp: tpVal }),
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              showToast(`Posisi #${ticket} berhasil diperbarui (SL: ${slVal}, TP: ${tpVal || "None"})`, "success");
+              fetchPositions();
+              fetchChartData();
+            } else {
+              showToast(`Gagal update posisi: ${data.detail || "Error MT5"}`, "error");
+            }
+          } catch (err) {
+            showToast(`Kesalahan jaringan: ${err}`, "error");
+          }
+        });
+      });
     } catch (e) {
       console.error("fetchPositions error", e);
     }

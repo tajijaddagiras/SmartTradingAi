@@ -138,8 +138,13 @@ class NexusTradeEngine:
         if raw_df.empty:
             return
 
-        # 3. Evaluate 3-Factor Confluence Matrix
-        signal = confluence_engine.evaluate(symbol, raw_df)
+        # 3. Evaluate Multi-Timeframe Institutional Confluence (H4 Macro + H1 Structure + M15/M5 Trigger)
+        try:
+            signal = confluence_engine.evaluate_multi_timeframe(symbol)
+        except Exception as e:
+            logger.warning(f"MTF evaluation fallback for {symbol}: {e}")
+            signal = confluence_engine.evaluate(symbol, raw_df)
+
         if signal.action not in ("BUY", "SELL"):
             return
 
@@ -194,6 +199,7 @@ class NexusTradeEngine:
                 action=signal.action,
                 lot=lot,
                 sl=signal.sl,
+                tp=getattr(signal, "tp", None),
                 rationale=rationale_with_layer
             )
             if ticket:
